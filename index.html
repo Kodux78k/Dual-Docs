@@ -10,172 +10,184 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
 <style>
   :root{
-    --bg:#0a0e18; --ink:#e8ecf6; --muted:#9fb3c7; --card:#0f1424; --ring:rgba(255,255,255,.14);
-    --gradA:#ff00ff; --gradB:#00ffff; --accent:#36f6a2;
+    --bg:#0a0e18; --ink:#e8ecf6; --muted:#9fb3c7; --ring:rgba(255,255,255,.14);
+    --card:#0f1424; --btn:#0c1323; --gradA:#ff00ff; --gradB:#00ffff; --accent:#36f6a2;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
-  .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}
-  .portal{width:min(860px,100%);background:linear-gradient(42deg,#0b0f1e80,#0b0f1eb3), radial-gradient(1200px 600px at 50% -20%, #00ffff22, transparent 60%), radial-gradient(900px 600px at 120% 20%, #ff00ff22, transparent 60%); border:1px solid var(--ring);border-radius:20px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.35)}
-  .head{display:flex;gap:12px;align-items:center;margin:0 0 14px 0}
-  .logo{width:56px;height:56px;border-radius:14px;background:url('icons/icon-192.png') center/cover no-repeat;flex:0 0 56px;border:1px solid var(--ring)}
-  h1{margin:0;font-weight:700;font-size:1.25rem;letter-spacing:.2px}
-  .sub{margin-top:4px;color:var(--muted);font-size:.95rem}
-  .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
-  .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:12px}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  input,button,textarea{background:#0b1223;color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px;outline:none;box-shadow:none;width:100%}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .row>*{flex:1 1 140px}
-  button.primary{background:linear-gradient(42deg,var(--gradA),var(--gradB));border:0;color:#071018;font-weight:700}
-  .stack{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:40vh;overflow:auto}
-  .item{display:flex;align-items:center;justify-content:space-between;background:#0c1324;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
-  .badge{font-size:.8rem;color:#9cc;opacity:.85}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+  .page{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:14px}
+  .card{width:min(720px,100%);background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:16px}
+  .hero{display:flex;gap:12px;align-items:center;justify-content:center}
+  .logo{width:64px;height:64px;border-radius:16px;background:url('icons/icon-192.png') center/cover no-repeat;border:1px solid var(--ring)}
+  h1{margin:.2rem 0 0 0;font-size:1.25rem;letter-spacing:.2px;text-align:center}
+  .muted{color:var(--muted);font-size:.95rem;text-align:center;margin-top:4px}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+  button{background:var(--btn);color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;min-width:140px}
+  .primary{background:linear-gradient(42deg,var(--gradA),var(--gradB));border:0;color:#071018;font-weight:800}
+  .tiny{padding:8px 10px;min-width:auto;font-size:.9rem}
+  .pill{border-radius:999px}
   .status{position:fixed;top:10px;right:10px;background:#0c1324;border:1px solid var(--ring);padding:8px 10px;border-radius:12px;font-size:.85rem;opacity:.9}
-  .install{position:fixed;bottom:14px;right:14px}
+  /* Settings panel (toggle) */
+  .settings{width:min(720px,100%);background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:0;overflow:hidden;display:none}
+  .settings.open{display:block}
+  .st-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--ring)}
+  .st-body{padding:12px 14px;display:grid;gap:12px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1 1 180px}
+  input[type="text"],input[type="file"]{width:100%;background:#0b1223;color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px}
+  label small{display:block;color:var(--muted);font-size:.85rem;margin-bottom:4px}
+  .hint{color:var(--muted);font-size:.85rem}
+  .list{max-height:36vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#0b1223}
 </style>
 </head>
 <body>
-<div class="status" id="status">Conexão: <b id="net">…</b></div>
-<div class="wrap">
-  <div class="portal">
-    <div class="head">
+<div class="status">Conexão: <b id="net">…</b></div>
+
+<main class="page">
+  <section class="card" aria-label="Portal">
+    <div class="hero">
       <div class="logo" aria-hidden="true"></div>
+    </div>
+    <h1>Livro Vivo — Portal</h1>
+    <p class="muted">Leve, clean e direto: entrar no livro, ver seus documentos e ajustar configs só quando quiser.</p>
+    <div class="actions">
+      <button class="primary pill" id="enter">Entrar no Livro</button>
+      <button class="pill" id="docs">Seus documentos</button>
+      <button class="tiny" id="toggleSettings">Configurações</button>
+      <button class="tiny" id="installBtn" style="display:none">Instalar</button>
+    </div>
+  </section>
+
+  <section class="settings" id="settingsPanel" aria-label="Configurações">
+    <div class="st-head">
+      <strong>Configurações</strong>
+      <button class="tiny" id="closeSettings">Fechar</button>
+    </div>
+    <div class="st-body">
+      <div class="row">
+        <label>
+          <small>Nome exibido</small>
+          <input type="text" id="profName" placeholder="Ex.: Kodux" />
+        </label>
+        <label>
+          <small>Namespace (prefixo das chaves)</small>
+          <input type="text" id="ns" placeholder="Ex.: infodose::v3::" value="infodose::v3::" />
+        </label>
+      </div>
+      <div class="row">
+        <button id="saveProf">Salvar perfil</button>
+        <button id="scan">Escanear LocalStorage</button>
+      </div>
       <div>
-        <h1>Portal — Livro Vivo</h1>
-        <div class="sub">Entre com seu perfil e acesse seus salvamentos locais (LocalStorage).</div>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <h2 style="margin:.2rem 0 .6rem 0;">Sua seção</h2>
+        <strong>Stacks</strong>
+        <div class="hint">Exporta/Importa suas chaves de documentos para migrar entre devices. Filtra por namespace.</div>
         <div class="row">
-          <label style="flex:2">
-            <small>Nome exibido</small>
-            <input id="profName" placeholder="Ex.: Kodux" />
-          </label>
-          <label style="flex:1">
-            <small>Chave do namespace</small>
-            <input id="ns" placeholder="Ex.: infodose::v3::" value="infodose::v3::" />
-          </label>
+          <button id="exportJson">Export JSON</button>
+          <input type="file" id="importFile" accept="application/json" />
         </div>
-        <div class="controls">
-          <button class="primary" id="saveProf">Salvar perfil</button>
-          <button id="clearProf">Limpar perfil</button>
+        <div class="row">
+          <label>
+            <small>Reescrever namespace durante import?</small>
+            <input type="text" id="rewriteNs" placeholder="Ex.: infodose::v4:: (opcional)" />
+          </label>
         </div>
       </div>
-
-      <div class="card">
-        <h2 style="margin:.2rem 0 .6rem 0;">Seus documentos</h2>
-        <div class="controls">
-          <button id="scan">Escanear LocalStorage</button>
-          <button id="newDoc">Novo documento (colar texto)</button>
-        </div>
-        <div id="stack" class="stack" aria-live="polite"></div>
-      </div>
-
-      <div class="card">
-        <h2 style="margin:.2rem 0 .6rem 0;">Entrar no Livro</h2>
-        <div class="controls">
-          <button class="primary" id="enter">Entrar no Livro Vivo</button>
-          <button id="installBtn" class="install">Instalar App</button>
-        </div>
-        <small class="badge">Ao entrar, abriremos <code>Livro-vivo-93beatyv3-PWA.html</code>. Se você selecionar um documento, passaremos um <code>?doc=...</code> na URL.</small>
+      <div>
+        <strong>Encontrados</strong>
+        <div id="stack" class="list" aria-live="polite"></div>
       </div>
     </div>
-  </div>
-</div>
+  </section>
+</main>
 
 <script>
 (function(){
   const $ = (q,r=document)=>r.querySelector(q);
-  const $$ = (q,r=document)=>[...r.querySelectorAll(q)];
-  const nameK = 'infodose::profile.name';
-  const nsK   = 'infodose::profile.ns';
-  const stackBox = $('#stack');
-  const profile = {name: localStorage.getItem(nameK)||'', ns: localStorage.getItem(nsK)||'infodose::v3::'};
+  const nameK='infodose::profile.name', nsK='infodose::profile.ns';
+  const stackBox=$('#stack'), panel=$('#settingsPanel');
 
-  $('#profName').value = profile.name;
-  $('#ns').value = profile.ns;
-
-  $('#saveProf').onclick = () => {
-    localStorage.setItem(nameK, $('#profName').value.trim());
-    localStorage.setItem(nsK, $('#ns').value.trim() || 'infodose::v3::');
-    alert('Perfil salvo ✅');
-  };
-  $('#clearProf').onclick = () => {
-    localStorage.removeItem(nameK);
-    localStorage.removeItem(nsK);
-    $('#profName').value=''; $('#ns').value='infodose::v3::';
-  };
-
-  // Online/offline indicator
-  const updateNet = () => $('#net').textContent = navigator.onLine ? 'online' : 'offline';
-  addEventListener('online', updateNet); addEventListener('offline', updateNet); updateNet();
+  // Basic net status
+  const updateNet=()=> $('#net').textContent = navigator.onLine ? 'online' : 'offline';
+  addEventListener('online',updateNet); addEventListener('offline',updateNet); updateNet();
 
   // PWA install
-  let deferredPrompt=null;
-  const installBtn = $('#installBtn');
-  installBtn.style.display='none';
-  window.addEventListener('beforeinstallprompt', (e)=>{
-    e.preventDefault(); deferredPrompt = e; installBtn.style.display='inline-flex';
-  });
-  installBtn.onclick = async ()=>{ if(!deferredPrompt) return;
-    deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none';
-  };
+  let deferredPrompt=null; const installBtn=$('#installBtn');
+  window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; installBtn.style.display='inline-flex'; });
+  installBtn.onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); const {outcome}=await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none'; };
 
-  // Stack scanner — busca por chaves que parecem documentos (namespaces comuns)
-  function scanStorage(ns){
+  // Profile
+  const profile={ name: localStorage.getItem(nameK)||'', ns: localStorage.getItem(nsK)||'infodose::v3::' };
+  $('#profName').value=profile.name; $('#ns').value=profile.ns;
+  $('#saveProf').onclick=()=>{ localStorage.setItem(nameK,$('#profName').value.trim()); localStorage.setItem(nsK,$('#ns').value.trim()||'infodose::v3::'); alert('Perfil salvo ✅'); };
+
+  // Navigation
+  $('#enter').onclick=()=> window.location='Livro-vivo-93beatyv3-PWA.html';
+  $('#docs').onclick=()=>{ openSettings(); scan(); };
+
+  // Settings toggle
+  $('#toggleSettings').onclick=()=> panel.classList.toggle('open');
+  $('#closeSettings').onclick=()=> panel.classList.remove('open');
+  function openSettings(){ panel.classList.add('open'); }
+
+  // Scan docs
+  function scan(){
     stackBox.textContent='';
-    const keys = Object.keys(localStorage).sort();
-    const candidates = keys.filter(k =>
-      (!ns || k.startsWith(ns)) && /(doc|md|stack|page|livro|content|note)/i.test(k)
-    );
-    if(candidates.length===0) {
-      const p=document.createElement('p'); p.textContent='Nenhum documento encontrado nesse namespace.'; stackBox.appendChild(p);
-      return;
-    }
-    candidates.forEach(k=>{
-      const row=document.createElement('div'); row.className='item';
-      const left=document.createElement('div');
-      const chars=(localStorage.getItem(k)||'').length;
-      left.innerHTML = `<b>${k}</b><div class="badge">${chars} chars</div>`;
-      const open=document.createElement('button'); open.textContent='Abrir';
-      open.onclick = ()=>{
-        const target='Livro-vivo-93beatyv3-PWA.html?doc='+encodeURIComponent(k);
-        window.location = target;
-      };
-      row.append(left, open);
-      stackBox.appendChild(row);
+    const ns=($('#ns').value.trim()||'infodose::v3::');
+    const keys=Object.keys(localStorage).sort().filter(k=>(!ns||k.startsWith(ns)) && /(doc|md|stack|page|livro|content|note)/i.test(k));
+    if(!keys.length){ const p=document.createElement('p'); p.textContent='Nenhum documento encontrado para este namespace.'; p.className='hint'; stackBox.appendChild(p); return; }
+    keys.forEach(k=>{
+      const it=document.createElement('div'); it.className='item';
+      const a=document.createElement('div'); a.innerHTML='<b>'+k+'</b><div class="hint">'+(localStorage.getItem(k)||'').length+' chars</div>';
+      const b=document.createElement('div');
+      const open=document.createElement('button'); open.className='tiny'; open.textContent='Abrir'; open.onclick=()=> window.location='Livro-vivo-93beatyv3-PWA.html?doc='+encodeURIComponent(k);
+      const copy=document.createElement('button'); copy.className='tiny'; copy.textContent='Copiar chave'; copy.onclick=()=>{ navigator.clipboard.writeText(k); };
+      b.append(open,copy); it.append(a,b); stackBox.appendChild(it);
     });
   }
+  $('#scan').onclick=scan; scan();
 
-  $('#scan').onclick = () => scanStorage($('#ns').value.trim());
-  // auto-scan on load
-  scanStorage(profile.ns);
-
-  // New doc quick-add
-  $('#newDoc').onclick = ()=>{
-    const ns = $('#ns').value.trim() || 'infodose::v3::';
-    const id = prompt('ID do documento (só o nome, sem espaço):','demo');
-    if(!id) return;
-    const txt = prompt('Cole o conteúdo do documento:');
-    if(txt==null) return;
-    const key = ns + 'doc::' + id;
-    localStorage.setItem(key, txt);
-    scanStorage(ns);
-    if(confirm('Abrir no Livro agora?')) window.location = 'Livro-vivo-93beatyv3-PWA.html?doc='+encodeURIComponent(key);
+  // Export JSON
+  $('#exportJson').onclick=()=>{
+    const ns=($('#ns').value.trim()||'');
+    const keys=Object.keys(localStorage).filter(k=>!ns || k.startsWith(ns));
+    const data={ namespace: ns, exportedAt: new Date().toISOString(), items: {} };
+    keys.forEach(k=> data.items[k]=localStorage.getItem(k));
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=(ns?ns.replace(/[:]/g,'_'):'local')+'stacks.json'; a.click(); URL.revokeObjectURL(a.href);
   };
 
-  // Enter
-  $('#enter').onclick = ()=> window.location = 'Livro-vivo-93beatyv3-PWA.html';
-})();
-</script>
+  // Import JSON
+  $('#importFile').onchange=async(e)=>{
+    const f=e.target.files && e.target.files[0]; if(!f) return;
+    const text=await f.text(); let data=null;
+    try{ data=JSON.parse(text); }catch(err){ alert('JSON inválido'); return; }
+    const rewrite=$('#rewriteNs').value.trim();
+    if(!data.items || typeof data.items!=='object'){ alert('Arquivo não contém {items}'); return; }
+    const entries=Object.entries(data.items);
+    let count=0;
+    entries.forEach(([k,v])=>{
+      let key=k;
+      if(rewrite){
+        // se a chave original tinha namespace, substitui prefixo até o primeiro '::'
+        const ix=k.indexOf('::');
+        if(ix>0){
+          const suffix=k.slice(k.indexOf('::')+2); // após primeiro ::
+          key=rewrite + suffix;
+        }else{
+          key=rewrite + k;
+        }
+      }
+      try{ localStorage.setItem(key, String(v)); count++; }catch(e){ /* quota or others */ }
+    });
+    alert('Import concluído: '+count+' itens.');
+    scan();
+  };
 
-<script>
-// SW register for the portal too
-if('serviceWorker' in navigator){ addEventListener('load',()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+  // SW for portal
+  if('serviceWorker' in navigator){ addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+})();
 </script>
 </body>
 </html>
