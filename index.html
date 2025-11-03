@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Portal — Livro Vivo</title>
+<meta name="theme-color" content="#0a0e18" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icons/icon-192.png" />
+<link rel="apple-touch-icon" href="icons/icon-192.png" />
+<style>
+  :root{
+    --bg:#0a0e18; --ink:#e8ecf6; --muted:#9fb3c7; --card:#0f1424; --ring:rgba(255,255,255,.14);
+    --gradA:#ff00ff; --gradB:#00ffff; --accent:#36f6a2;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+  .wrap{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+  .portal{width:min(860px,100%);background:linear-gradient(42deg,#0b0f1e80,#0b0f1eb3), radial-gradient(1200px 600px at 50% -20%, #00ffff22, transparent 60%), radial-gradient(900px 600px at 120% 20%, #ff00ff22, transparent 60%); border:1px solid var(--ring);border-radius:20px;padding:18px;box-shadow:0 8px 40px rgba(0,0,0,.35)}
+  .head{display:flex;gap:12px;align-items:center;margin:0 0 14px 0}
+  .logo{width:56px;height:56px;border-radius:14px;background:url('icons/icon-192.png') center/cover no-repeat;flex:0 0 56px;border:1px solid var(--ring)}
+  h1{margin:0;font-weight:700;font-size:1.25rem;letter-spacing:.2px}
+  .sub{margin-top:4px;color:var(--muted);font-size:.95rem}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:12px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  input,button,textarea{background:#0b1223;color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px;outline:none;box-shadow:none;width:100%}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1 1 140px}
+  button.primary{background:linear-gradient(42deg,var(--gradA),var(--gradB));border:0;color:#071018;font-weight:700}
+  .stack{display:flex;flex-direction:column;gap:8px;margin-top:6px;max-height:40vh;overflow:auto}
+  .item{display:flex;align-items:center;justify-content:space-between;background:#0c1324;border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px}
+  .badge{font-size:.8rem;color:#9cc;opacity:.85}
+  .status{position:fixed;top:10px;right:10px;background:#0c1324;border:1px solid var(--ring);padding:8px 10px;border-radius:12px;font-size:.85rem;opacity:.9}
+  .install{position:fixed;bottom:14px;right:14px}
+</style>
+</head>
+<body>
+<div class="status" id="status">Conexão: <b id="net">…</b></div>
+<div class="wrap">
+  <div class="portal">
+    <div class="head">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Portal — Livro Vivo</h1>
+        <div class="sub">Entre com seu perfil e acesse seus salvamentos locais (LocalStorage).</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2 style="margin:.2rem 0 .6rem 0;">Sua seção</h2>
+        <div class="row">
+          <label style="flex:2">
+            <small>Nome exibido</small>
+            <input id="profName" placeholder="Ex.: Kodux" />
+          </label>
+          <label style="flex:1">
+            <small>Chave do namespace</small>
+            <input id="ns" placeholder="Ex.: infodose::v3::" value="infodose::v3::" />
+          </label>
+        </div>
+        <div class="controls">
+          <button class="primary" id="saveProf">Salvar perfil</button>
+          <button id="clearProf">Limpar perfil</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:.2rem 0 .6rem 0;">Seus documentos</h2>
+        <div class="controls">
+          <button id="scan">Escanear LocalStorage</button>
+          <button id="newDoc">Novo documento (colar texto)</button>
+        </div>
+        <div id="stack" class="stack" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="margin:.2rem 0 .6rem 0;">Entrar no Livro</h2>
+        <div class="controls">
+          <button class="primary" id="enter">Entrar no Livro Vivo</button>
+          <button id="installBtn" class="install">Instalar App</button>
+        </div>
+        <small class="badge">Ao entrar, abriremos <code>Livro-vivo-93beatyv3-PWA.html</code>. Se você selecionar um documento, passaremos um <code>?doc=...</code> na URL.</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = (q,r=document)=>r.querySelector(q);
+  const $$ = (q,r=document)=>[...r.querySelectorAll(q)];
+  const nameK = 'infodose::profile.name';
+  const nsK   = 'infodose::profile.ns';
+  const stackBox = $('#stack');
+  const profile = {name: localStorage.getItem(nameK)||'', ns: localStorage.getItem(nsK)||'infodose::v3::'};
+
+  $('#profName').value = profile.name;
+  $('#ns').value = profile.ns;
+
+  $('#saveProf').onclick = () => {
+    localStorage.setItem(nameK, $('#profName').value.trim());
+    localStorage.setItem(nsK, $('#ns').value.trim() || 'infodose::v3::');
+    alert('Perfil salvo ✅');
+  };
+  $('#clearProf').onclick = () => {
+    localStorage.removeItem(nameK);
+    localStorage.removeItem(nsK);
+    $('#profName').value=''; $('#ns').value='infodose::v3::';
+  };
+
+  // Online/offline indicator
+  const updateNet = () => $('#net').textContent = navigator.onLine ? 'online' : 'offline';
+  addEventListener('online', updateNet); addEventListener('offline', updateNet); updateNet();
+
+  // PWA install
+  let deferredPrompt=null;
+  const installBtn = $('#installBtn');
+  installBtn.style.display='none';
+  window.addEventListener('beforeinstallprompt', (e)=>{
+    e.preventDefault(); deferredPrompt = e; installBtn.style.display='inline-flex';
+  });
+  installBtn.onclick = async ()=>{ if(!deferredPrompt) return;
+    deferredPrompt.prompt(); const { outcome } = await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none';
+  };
+
+  // Stack scanner — busca por chaves que parecem documentos (namespaces comuns)
+  function scanStorage(ns){
+    stackBox.textContent='';
+    const keys = Object.keys(localStorage).sort();
+    const candidates = keys.filter(k =>
+      (!ns || k.startsWith(ns)) && /(doc|md|stack|page|livro|content|note)/i.test(k)
+    );
+    if(candidates.length===0) {
+      const p=document.createElement('p'); p.textContent='Nenhum documento encontrado nesse namespace.'; stackBox.appendChild(p);
+      return;
+    }
+    candidates.forEach(k=>{
+      const row=document.createElement('div'); row.className='item';
+      const left=document.createElement('div');
+      const chars=(localStorage.getItem(k)||'').length;
+      left.innerHTML = `<b>${k}</b><div class="badge">${chars} chars</div>`;
+      const open=document.createElement('button'); open.textContent='Abrir';
+      open.onclick = ()=>{
+        const target='Livro-vivo-93beatyv3-PWA.html?doc='+encodeURIComponent(k);
+        window.location = target;
+      };
+      row.append(left, open);
+      stackBox.appendChild(row);
+    });
+  }
+
+  $('#scan').onclick = () => scanStorage($('#ns').value.trim());
+  // auto-scan on load
+  scanStorage(profile.ns);
+
+  // New doc quick-add
+  $('#newDoc').onclick = ()=>{
+    const ns = $('#ns').value.trim() || 'infodose::v3::';
+    const id = prompt('ID do documento (só o nome, sem espaço):','demo');
+    if(!id) return;
+    const txt = prompt('Cole o conteúdo do documento:');
+    if(txt==null) return;
+    const key = ns + 'doc::' + id;
+    localStorage.setItem(key, txt);
+    scanStorage(ns);
+    if(confirm('Abrir no Livro agora?')) window.location = 'Livro-vivo-93beatyv3-PWA.html?doc='+encodeURIComponent(key);
+  };
+
+  // Enter
+  $('#enter').onclick = ()=> window.location = 'Livro-vivo-93beatyv3-PWA.html';
+})();
+</script>
+
+<script>
+// SW register for the portal too
+if('serviceWorker' in navigator){ addEventListener('load',()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+</script>
+</body>
+</html>
