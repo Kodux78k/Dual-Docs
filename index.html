@@ -8,55 +8,102 @@
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icons/icon-192.png" />
 <link rel="apple-touch-icon" href="icons/icon-192.png" />
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
 <style>
-  :root{
-    --bg:#0a0e18; --ink:#e8ecf6; --muted:#9fb3c7; --ring:rgba(255,255,255,.14);
-    --card:#0f1424; --btn:#0c1323; --gradA:#ff00ff; --gradB:#00ffff; --accent:#36f6a2;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
-  .page{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:14px}
-  .card{width:min(720px,100%);background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:16px}
-  .hero{display:flex;gap:12px;align-items:center;justify-content:center}
-  .logo{width:64px;height:64px;border-radius:16px;background:url('icons/icon-192.png') center/cover no-repeat;border:1px solid var(--ring)}
-  h1{margin:.2rem 0 0 0;font-size:1.25rem;letter-spacing:.2px;text-align:center}
-  .muted{color:var(--muted);font-size:.95rem;text-align:center;margin-top:4px}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
-  button{background:var(--btn);color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;min-width:140px}
-  .primary{background:linear-gradient(42deg,var(--gradA),var(--gradB));border:0;color:#071018;font-weight:800}
-  .tiny{padding:8px 10px;min-width:auto;font-size:.9rem}
-  .pill{border-radius:999px}
-  .status{position:fixed;top:10px;right:10px;background:#0c1324;border:1px solid var(--ring);padding:8px 10px;border-radius:12px;font-size:.85rem;opacity:.9}
-  /* Settings panel (toggle) */
-  .settings{width:min(720px,100%);background:var(--card);border:1px solid var(--ring);border-radius:16px;padding:0;overflow:hidden;display:none}
-  .settings.open{display:block}
-  .st-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--ring)}
-  .st-body{padding:12px 14px;display:grid;gap:12px}
-  .row{display:flex;gap:10px;flex-wrap:wrap}
-  .row>*{flex:1 1 180px}
-  input[type="text"],input[type="file"]{width:100%;background:#0b1223;color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px}
-  label small{display:block;color:var(--muted);font-size:.85rem;margin-bottom:4px}
-  .hint{color:var(--muted);font-size:.85rem}
-  .list{max-height:36vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
-  .item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#0b1223}
+:root{
+  --bg:#0a0e18; --ink:#e8ecf6; --muted:#9fb3c7; --ring:rgba(255,255,255,.14);
+  --card:#0f1424; --btn:#0c1323;
+  /* softer gradient with transparency */
+  --gradA: rgba(255,0,255,.6);
+  --gradB: rgba(0,255,255,.6);
+  --gradBtn: linear-gradient(42deg, var(--gradA), var(--gradB));
+  --btnHover: rgba(255,255,255,.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font:500 16px/1.4 ui-sans-serif,system-ui,Segoe UI,Roboto,Arial}
+.page{min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:14px}
+.card{width:min(720px,100%);background:var(--card);border:none;border-radius:16px;padding:16px;box-shadow:0 12px 48px rgba(0,0,0,.28)}
+.hero{display:flex;gap:12px;align-items:center;justify-content:center}
+.logo{width:64px;height:64px;border-radius:16px;background:url('icons/icon-192.png') center/cover no-repeat;border:1px solid var(--ring)}
+h1{margin:.2rem 0 0 0;font-size:1.25rem;letter-spacing:.2px;text-align:center}
+.muted{color:var(--muted);font-size:.95rem;text-align:center;margin-top:4px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+button{display:inline-flex;align-items:center;gap:8px;background:var(--btn);color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px 14px;min-width:140px;transition:background .2s}
+button svg{display:block}
+button.primary{background:var(--gradBtn);border:1px solid rgba(255,255,255,.1);color:#071018;font-weight:800}
+button:hover{background:var(--btnHover)}
+.primary:hover{filter:brightness(1.02)}
+.tiny{padding:8px 10px;min-width:auto;font-size:.9rem}
+.pill{border-radius:999px}
+.status{position:fixed;top:10px;right:10px;background:#0c1324;border:1px solid var(--ring);padding:8px 10px;border-radius:12px;font-size:.85rem;opacity:.9}
+/* Toggle panel */
+.settings{width:min(720px,100%);background:var(--card);border:none;border-radius:16px;padding:0;overflow:hidden;display:none;box-shadow:0 10px 36px rgba(0,0,0,.26)}
+.settings.open{display:block}
+.st-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.st-body{padding:12px 14px;display:grid;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 180px}
+input[type="text"],input[type="file"]{width:100%;background:#0b1223;color:var(--ink);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px}
+label small{display:block;color:var(--muted);font-size:.85rem;margin-bottom:4px}
+.hint{color:var(--muted);font-size:.85rem}
+.list{max-height:36vh;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:#0b1223}
+
+/* glass buttons */
+button{backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);}
+button.primary{box-shadow: 0 6px 28px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.12)}
+button.pill{box-shadow: 0 3px 16px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.10)}
+button:active{transform: translateY(1px);}
+
+/* gradient outline buttons (glass border) */
+button{
+  position:relative;
+  border:1px solid transparent;
+  background:
+    linear-gradient(#0c1323,#0c1323) padding-box,
+    linear-gradient(42deg,var(--gradA),var(--gradB)) border-box;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+button.primary{
+  background:
+    linear-gradient(#0c1323,#0c1323) padding-box,
+    linear-gradient(42deg,var(--gradA),var(--gradB)) border-box;
+  box-shadow:0 8px 28px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.10);
+}
+button:hover{background:
+    linear-gradient(#0e162a,#0e162a) padding-box,
+    linear-gradient(42deg,var(--gradA),var(--gradB)) border-box;}
+button:active{transform:translateY(1px)}
+/* icon-only sizing */
+.actions button{min-width:auto; padding:12px; width:52px; height:52px; justify-content:center}
+.actions button svg{width:22px;height:22px}
+.tiny{width:44px;height:44px;padding:8px}
+
+.icon-stack{display:flex;flex-direction:column;align-items:center;gap:8px}
+.icon-label{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);opacity:.9}
+.actions{gap:14px}
+
 </style>
 </head>
 <body>
 <div class="status">Conexão: <b id="net">…</b></div>
-
 <main class="page">
   <section class="card" aria-label="Portal">
     <div class="hero">
       <div class="logo" aria-hidden="true"></div>
     </div>
     <h1>Livro Vivo — Portal</h1>
-    <p class="muted">Leve, clean e direto: entrar no livro, ver seus documentos e ajustar configs só quando quiser.</p>
+    <p class="muted"></p>
     <div class="actions">
-      <button class="primary pill" id="enter">Entrar no Livro</button>
-      <button class="pill" id="docs">Seus documentos</button>
-      <button class="tiny" id="toggleSettings">Configurações</button>
-      <button class="tiny" id="installBtn" style="display:none">Instalar</button>
-    </div>
+  <div class="icon-stack">
+    <div class="icon-label">entrar</div>
+    <button class="primary pill" id="enter" aria-label="Entrar" title="Entrar"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 12h12m0 0-4-4m4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+  <button class="pill" id="docs" aria-label="Seus documentos" title="Seus documentos"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 3h6l4 4v14H7zM13 3v4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="tiny" id="toggleSettings" aria-label="Configurações" title="Configurações"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.66 4a6.66 6.66 0 01-.08 1l2.06 1.6-2 3.46-2.44-1a7.13 7.13 0 01-1.76 1l-.37 2.6h-4l-.37-2.6a7.13 7.13 0 01-1.76-1l-2.44 1-2-3.46 2.06-1.6a6.66 6.66 0 01-.08-1c0-.34.03-.67.08-1L2.62 9.4l2-3.45 2.44 1c.54-.4 1.13-.74 1.76-1l.37-2.6h4l.37 2.6c.63.26 1.22.6 1.76 1l2.44-1 2 3.45-2.06 1.6c.05.33.08.66.08 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button class="tiny" id="installBtn" style="display:none" aria-label="Instalar" title="Instalar"><svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+</div>
   </section>
 
   <section class="settings" id="settingsPanel" aria-label="Configurações">
@@ -107,30 +154,38 @@
   const nameK='infodose::profile.name', nsK='infodose::profile.ns';
   const stackBox=$('#stack'), panel=$('#settingsPanel');
 
-  // Basic net status
+  // Net status
   const updateNet=()=> $('#net').textContent = navigator.onLine ? 'online' : 'offline';
   addEventListener('online',updateNet); addEventListener('offline',updateNet); updateNet();
 
-  // PWA install
+  // Install
   let deferredPrompt=null; const installBtn=$('#installBtn');
   window.addEventListener('beforeinstallprompt', (e)=>{ e.preventDefault(); deferredPrompt=e; installBtn.style.display='inline-flex'; });
-  installBtn.onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); const {outcome}=await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none'; };
+  installBtn.onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; installBtn.style.display='none'; };
 
   // Profile
   const profile={ name: localStorage.getItem(nameK)||'', ns: localStorage.getItem(nsK)||'infodose::v3::' };
+  // Hero greeting + slogan
+  const hero = document.querySelector('.hero');
+  const h1 = document.querySelector('h1');
+  const name = localStorage.getItem(nameK) || '';
+  if (name) { h1.textContent = 'Bem-vindo, ' + name; } else { h1.textContent = 'Bem-vindo'; }
+  const sub = document.querySelector('.muted'); 
+  if (sub) { sub.innerHTML = '<span class="slogan"><b>sempre</b> <b>único</b>, <b>sempre</b> <b>seu</b></span>'; }
+
   $('#profName').value=profile.name; $('#ns').value=profile.ns;
   $('#saveProf').onclick=()=>{ localStorage.setItem(nameK,$('#profName').value.trim()); localStorage.setItem(nsK,$('#ns').value.trim()||'infodose::v3::'); alert('Perfil salvo ✅'); };
 
-  // Navigation
+  // Nav
   $('#enter').onclick=()=> window.location='Livro-vivo-93beatyv3-PWA.html';
   $('#docs').onclick=()=>{ openSettings(); scan(); };
 
-  // Settings toggle
+  // Toggle
   $('#toggleSettings').onclick=()=> panel.classList.toggle('open');
   $('#closeSettings').onclick=()=> panel.classList.remove('open');
   function openSettings(){ panel.classList.add('open'); }
 
-  // Scan docs
+  // Scan
   function scan(){
     stackBox.textContent='';
     const ns=($('#ns').value.trim()||'infodose::v3::');
@@ -170,22 +225,21 @@
     entries.forEach(([k,v])=>{
       let key=k;
       if(rewrite){
-        // se a chave original tinha namespace, substitui prefixo até o primeiro '::'
         const ix=k.indexOf('::');
         if(ix>0){
-          const suffix=k.slice(k.indexOf('::')+2); // após primeiro ::
+          const suffix=k.slice(k.indexOf('::')+2);
           key=rewrite + suffix;
         }else{
           key=rewrite + k;
         }
       }
-      try{ localStorage.setItem(key, String(v)); count++; }catch(e){ /* quota or others */ }
+      try{ localStorage.setItem(key, String(v)); count++; }catch(e){}
     });
     alert('Import concluído: '+count+' itens.');
     scan();
   };
 
-  // SW for portal
+  // SW
   if('serviceWorker' in navigator){ addEventListener('load', ()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
 })();
 </script>
