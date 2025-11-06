@@ -3292,177 +3292,63 @@ window.addEventListener('DOMContentLoaded', autoMountBugadao);
 </script>
 <!-- /KOBLLUX :: PATCH ÚNICO — TTS por Blocos -->
 
-<!-- KOBLLUX :: PATCH ÚNICO — DOCK LATERAL COMPACTA (mapeada) -->
-<style>
-  :root{ --dock-size: 52px; --dock-radius: 14px; }
-  @media (max-width: 768px){
-    :root{ --dock-size: 48px; --dock-radius: 12px; }
-  }
-
-  /* se quiser manter o painel antigo, remova a linha abaixo */
-  .kob-tts-panel{ display:none !important; }
-
-  .dock-lateral {
-    position: fixed;
-    left: max(10px, env(safe-area-inset-left));
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 9999;
-    pointer-events: auto;
-  }
-  .dock-lateral .dock-btn {
-    width: var(--dock-size);
-    height: var(--dock-size);
-    border-radius: var(--dock-radius);
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.14);
-    box-shadow:
-      0 10px 26px rgba(0,255,220,.16),
-      inset 0 1px 0 rgba(255,255,255,.08);
-    backdrop-filter: blur(10px) saturate(1.15);
-    -webkit-backdrop-filter: blur(10px) saturate(1.15);
-    cursor: pointer;
-    transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
-  }
-  .dock-lateral .dock-btn:hover { transform: translateY(-2px); }
-  .dock-lateral .dock-btn:active { transform: translateY(0); }
-  .dock-lateral .dock-btn svg {
-    width: calc(var(--dock-size) * .48);
-    height: calc(var(--dock-size) * .48);
-    stroke: rgba(230,255,255,.94);
-    fill: none; stroke-width: 2.1;
-    filter: drop-shadow(0 0 5px rgba(0,255,240,.35));
-  }
-  .dock-lateral .dock-btn.is-on{
-    box-shadow:
-      0 0 0 2px rgba(0,255,240,.32),
-      0 16px 36px rgba(0,255,220,.30),
-      inset 0 0 14px rgba(0,255,240,.18);
-    background: radial-gradient(120% 120% at 12% 12%,
-      rgba(0,255,240,.16), rgba(255,255,255,.05) 52%, rgba(255,255,255,.04));
-  }
-
-  /* destaque do bloco atual do TTS */
-  [data-tts-current]{
-    outline:2px dashed rgba(76,240,255,.9);
-    background:rgba(76,240,255,.06);
-    border-radius:10px;
-    transition:background .25s ease, outline .25s ease;
-  }
+<style id="INFODOXY_OVERRIDE_V1">
+:root{
+  --grad-a:#78e3ff; --grad-b:#b978ff;
+  --bg:#070b14; --panel:#0c1120;
+  --ink:#eaf6ff; --muted:#9db0cc;
+  --glow-in:#7af9ff; --glow-out:#b978ff;
+  --radius:18px; --blur:18px;
+}
+body{
+  background:radial-gradient(900px 700px at 50% 10%,rgba(123,243,255,.06),transparent 80%),
+             radial-gradient(600px 600px at 70% 100%,rgba(180,120,255,.04),transparent 80%),
+             var(--bg);
+  color:var(--ink);
+  font-family:"Inter","SF Pro",system-ui;
+}
+details.acc{
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 0 20px rgba(120,240,255,.04) inset,0 0 60px rgba(180,120,255,.05);
+  border-radius:var(--radius);
+  transition:.25s all ease;
+}
+details.acc:hover{box-shadow:0 0 25px rgba(120,240,255,.08),0 0 80px rgba(180,120,255,.1);}
+summary h2{color:var(--ink);text-shadow:0 0 12px rgba(120,240,255,.4);}
+.btn{
+  border:1px solid rgba(255,255,255,.15);
+  background:linear-gradient(45deg,rgba(120,240,255,.15),rgba(180,120,255,.12));
+  border-radius:12px;color:var(--ink);
+  backdrop-filter:blur(8px);
+  box-shadow:0 0 20px rgba(120,240,255,.15);
+  transition:.25s ease;
+}
+.btn:hover{background:linear-gradient(45deg,rgba(120,240,255,.25),rgba(180,120,255,.2));}
+#orb2d{
+  background:radial-gradient(120% 120% at 30% 30%,rgba(120,240,255,.6),transparent 70%),
+             radial-gradient(120% 120% at 70% 70%,rgba(180,120,255,.5),transparent 70%);
+  box-shadow:0 0 25px rgba(120,240,255,.4),0 0 80px rgba(180,120,255,.2);
+  animation:orb-spin 10s linear infinite,orb-breath 3.6s ease-in-out infinite;
+}
+#fab .menu .btn{
+  background:linear-gradient(42deg,rgba(120,240,255,.15),rgba(180,120,255,.12));
+  border:1px solid rgba(255,255,255,.15);
+  color:var(--ink);
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,.25);
+}
+.toast{
+  background:rgba(10,15,30,.8);
+  color:var(--ink);
+  box-shadow:0 0 18px rgba(120,240,255,.1);
+}
+img.md-img{border-radius:12px;box-shadow:0 0 25px rgba(120,240,255,.1);}
+@keyframes orb-breath{
+  0%,100%{filter:saturate(1) brightness(1);}
+  50%{filter:saturate(1.3) brightness(1.2);}
+}
 </style>
-
-<div class="dock-lateral" data-dock="tts">
-  <!-- TOGGLE VOZ -->
-  <button class="dock-btn" id="dock-tts-toggle" aria-label="Ativar voz">
-    <svg viewBox="0 0 24 24">
-      <path d="M4 10v4h4l5 4V6l-5 4H4z"></path>
-      <path d="M15 9a3 3 0 0 1 0 6"></path>
-      <path d="M17.5 6.5a6 6 0 0 1 0 11"></path>
-    </svg>
-  </button>
-  <!-- ANTERIOR -->
-  <button class="dock-btn" id="dock-tts-prev" aria-label="Bloco anterior">
-    <svg viewBox="0 0 24 24"><path d="M15 6l-8 6 8 6V6z"></path></svg>
-  </button>
-  <!-- SELEÇÃO -->
-  <button class="dock-btn" id="dock-tts-sel" aria-label="Ler seleção">
-    <svg viewBox="0 0 24 24">
-      <path d="M4 7l7 7"></path><path d="M11 7l-7 7"></path>
-      <path d="M14 5h6"></path><path d="M14 19h6"></path>
-    </svg>
-  </button>
-  <!-- PARAR -->
-  <button class="dock-btn" id="dock-tts-stop" aria-label="Parar voz">
-    <svg viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="2" ry="2"></rect></svg>
-  </button>
-</div>
-
-<script>
-(()=>{ // Dock Lateral mapeada nos botões existentes
-  const $ = (s)=>document.querySelector(s);
-  const btnToggle = $('#dock-tts-toggle');
-  const btnPrev   = $('#dock-tts-prev');
-  const btnSel    = $('#dock-tts-sel');
-  const btnStop   = $('#dock-tts-stop');
-
-  // possíveis alvos já existentes no app
-  const map = {
-    toggle: document.getElementById('btn-tts')
-         || document.querySelector('[data-action="tts"]')
-         || document.querySelector('.btn-emoji-tts,[data-emoji="speaker"],[data-emoji="tts"]'),
-    prev:   document.getElementById('btn-tts-prev')
-         || document.querySelector('[data-action="ttsPrev"]'),
-    sel:    document.getElementById('btn-tts-sel')
-         || document.querySelector('[data-action="ttsSel"]'),
-    stop:   document.getElementById('btn-tts-stop')
-         || document.querySelector('[data-action="ttsStop"]'),
-  };
-
-  // helpers
-  const synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
-  const pickVoice = ()=>{
-    if(!synth) return null;
-    const vs = synth.getVoices() || [];
-    return vs.find(v=>/pt[-_]BR/i.test(v.lang)) || vs.find(v=>/pt/i.test(v.lang)) || vs[0] || null;
-  };
-  const speakSelectionFallback = ()=>{
-    if(!synth) return;
-    const text = (window.getSelection && String(window.getSelection())) || '';
-    const t = text.trim(); if(!t) return;
-    try{ synth.cancel(); }catch(e){}
-    const u = new SpeechSynthesisUtterance(t);
-    const v = pickVoice(); if(v) u.voice = v;
-    u.lang = (v && v.lang) || 'pt-BR';
-    synth.speak(u);
-  };
-
-  function clickOrAction(el, actionName, fallback){
-    if(el){ el.dispatchEvent(new Event('click', {bubbles:true})); return; }
-    // tenta ACTIONS
-    if(window.ACTIONS && typeof window.ACTIONS[actionName]==='function'){ window.ACTIONS[actionName](); return; }
-    // tenta API direta do TTS
-    if(window.KOBLLUX_TTS){
-      try{ fallback(window.KOBLLUX_TTS); }catch(e){}
-    }
-  }
-
-  btnToggle?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    clickOrAction(map.toggle, 'tts', (api)=>{
-      const info = api.info?.()||{};
-      info.speaking ? api.stop() : api.play();
-    });
-  });
-  btnPrev?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    clickOrAction(map.prev, 'ttsPrev', (api)=>api.prev?.());
-  });
-  btnSel?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    if(map.sel){ map.sel.dispatchEvent(new Event('click', {bubbles:true})); return; }
-    speakSelectionFallback();
-  });
-  btnStop?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    clickOrAction(map.stop, 'ttsStop', (api)=>api.stop?.());
-  });
-
-  // estado visual (glow) sincronizado
-  function refreshState(){
-    try{
-      const info = window.KOBLLUX_TTS?.info?.();
-      btnToggle?.classList.toggle('is-on', !!(info && info.speaking));
-    }catch(e){}
-  }
-  setInterval(refreshState, 900);
-  setTimeout(refreshState, 200);
-})();
-</script>
-<!-- /KOBLLUX :: PATCH ÚNICO — DOCK LATERAL COMPACTA -->
 
 <!-- KOBLLUX :: PATCH ÚNICO — TTS v3 (Reset + Outline + ASCII + Archetypes) -->
 <style>
