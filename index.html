@@ -2618,6 +2618,33 @@ document.addEventListener('keydown', e=>{
   });
 </script>
 
- 
 
+
+ <script type="module">
+  import { autoMountMDGen, installUploadStaging } from './js/kobllux_md_gen.mjs';
+  window.addEventListener('DOMContentLoaded', ()=>{
+    autoMountMDGen();                    // adiciona Converter → MD e Converter+Gerar
+    installUploadStaging({               // força subir para o textarea antes de render
+      inputSelector: 'input[type=file], #upload, #fileUpload, .upload-input',
+      stageOnly: true,
+     
+    });
+  });
+</script>
+
+<script type="module">
+  import { autoMountMDGen, installUploadStaging } from './kobllux_md_gen.mjs';
+  import { installAsciiGlitchMode } from './js/kobllux_md_gen_patch_ascii_glitch.mjs';
+
+  window.addEventListener('DOMContentLoaded', () => {
+    autoMountMDGen();
+    installUploadStaging({
+      inputSelector: 'input[type=file], #upload, #fileUpload, .upload-input',
+      stageOnly: true,
+      encoding: 'utf-8' // mantém correto
+    });
+    installAsciiGlitchMode({ selector: 'textarea, pre, code', intensity: 0.7 });
+  });
+</script>
+ 
 </body></html>
