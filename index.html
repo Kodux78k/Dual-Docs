@@ -2844,4 +2844,163 @@ function autoMountMDGen(){
 }
 window.addEventListener('DOMContentLoaded', autoMountMDGen);
 </script>
+
+
+ <style id="GLITCH_ASCII_CSS_V1">
+/* Mini glktjth – visual base (ASCII/mono, leve) */
+.glk { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .2px; }
+.glk .md-img { display:none !important; } /* só texto bruto */
+.glk .btn { letter-spacing: 0; } /* botões seguem normal */
+</style>
+
+<script id="GLKTJTH_MINI_V2">
+/* Mini glktjth (ASCII only) – v2 (idempotente) */
+(()=>{ if(window.__glk_v2) return; window.__glk_v2=true;
+  const ASCII_POOL="!@#$%^&*()_+-=[]{}|;:,.<>/?\\=~";
+  const NON_ASCII=/[^\x20-\x7E]/g;
+  const EMOJI=/[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+  const SKIP=new Set(["SCRIPT","STYLE","CODE","PRE","KBD","TEXTAREA","INPUT","BUTTON","AUDIO","VIDEO","CANVAS"]);
+  const rand=n=>Math.floor(Math.random()*n);
+  const pickMini=()=>Array.from({length:1+rand(3)},()=>ASCII_POOL[rand(ASCII_POOL.length)]).join('');
+  const pickBlock=()=>["##","//","??","++","**","==","--","::",";;","||","@@","%%","$$","!!","<>","[]","{}","~~"][rand(18)];
+  function asciiize(s){ if(!s) return s;
+    s=s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    s=s.replace(EMOJI,()=>pickBlock());
+    s=s.replace(NON_ASCII,ch=> (ch==='\n'||ch==='\t')?ch:pickMini());
+    return s;
+  }
+  function glitchDOM(root=document.getElementById('root')){
+    if(!root) return;
+    const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{
+      acceptNode(n){ const p=n.parentElement; if(!p) return NodeFilter.FILTER_REJECT;
+        if(SKIP.has(p.tagName)) return NodeFilter.FILTER_REJECT;
+        if(p.closest('.btn,.action,#fab,.menu')) return NodeFilter.FILTER_REJECT;
+        return n.nodeValue && n.nodeValue.trim()?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT;
+      }
+    });
+    const todo=[]; while(w.nextNode()) todo.push(w.currentNode);
+    todo.forEach(n=>n.nodeValue=asciiize(n.nodeValue));
+    root.classList.add('glk');
+  }
+  function installAfterBuild(){
+    const run=()=>{ try{ glitchDOM(); }catch(e){ console.warn('[glktjth] fail',e);} };
+    if(typeof window.autoBuild==='function'){ const o=window.autoBuild; window.autoBuild=(t)=>{ o(t); run(); }; }
+    if(typeof window.autoBuildNested==='function'){ const n=window.autoBuildNested; window.autoBuildNested=(t)=>{ n(t); run(); }; }
+    if(document.getElementById('root')?.children.length) run();
+  }
+  window.__glk={asciiize,glitchDOM};  // util opcional
+  window.addEventListener('DOMContentLoaded',installAfterBuild);
+})();
+</script>
+
+<script id="UPLOAD_TO_EDITOR_PATCH_V2">
+/* Upload→Editor (PDF/TXT/MD) + Drag&Drop + Botões "Converter" (tabelas→listas)
+   - Rebate qualquer listener antigo do #fileInput clonando o elemento (sem quebrar layout)
+   - Abre aba Texto, preenche #srcText, NÃO chama autoBuild automaticamente
+   - Idempotente: pode colar mais de uma vez que não duplica nada
+*/
+(()=>{ if(window.__u2e_v2) return; window.__u2e_v2=true;
+  const $=(q,r=document)=>r.querySelector(q);
+  const toast=(m)=>{ try{ const t=document.createElement('div'); t.className='toast'; t.textContent=m; (document.getElementById('toasts')||document.body).appendChild(t); setTimeout(()=>t.remove(),1800);}catch{} };
+
+  async function pdfToText(file){
+    try{
+      if(!window.pdfjsLib) return '';
+      const buf=await file.arrayBuffer();
+      const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+      let out=''; for(let p=1;p<=pdf.numPages;p++){ const pg=await pdf.getPage(p); const c=await pg.getTextContent(); out+=c.items.map(it=>it.str).join(' ')+'\n'; }
+      return out;
+    }catch(e){ console.warn('pdfToText fail',e); return ''; }
+  }
+  async function readFileAsText(file){
+    const name=file.name.toLowerCase();
+    if(name.endsWith('.pdf')) return await pdfToText(file);
+    return await file.text();
+  }
+  function switchToTextTab(){
+    const tabBtn=$('.tab[data-tab="text"]'); const tabPane=$('#tab-text');
+    if(tabBtn && tabPane){ document.querySelectorAll('.tab,.tab-content').forEach(el=>el.classList.remove('active')); tabBtn.classList.add('active'); tabPane.classList.add('active'); }
+    $('#imp')?.style && ($('#imp').style.display='block'); // mantém painel aberto
+  }
+  async function handleFiles(files){
+    if(!files || !files.length) return;
+    const f=files[0]; const ta=$('#srcText'); const prev=$('#filePreview');
+    if(prev) prev.textContent='Lendo '+f.name+'...';
+    const txt=await readFileAsText(f);
+    switchToTextTab();
+    if(ta){ ta.value = txt; ta.focus(); ta.setSelectionRange(0,0); }
+    if(prev) prev.textContent='Pronto: '+f.name+' → editor';
+    toast('Arquivo no editor (sem render automático)');
+  }
+
+  function rebindFileInputToEditor(){
+    const old=$('#fileInput'); if(!old) return;
+    const clone=old.cloneNode(true); old.replaceWith(clone); // remove listeners antigos
+    clone.addEventListener('change', async (e)=>{
+      const f=e.target.files?.[0]; if(!f) return;
+      await handleFiles([f]);
+    });
+  }
+
+  function enableDropOnEditor(){
+    const ta=$('#srcText'); if(!ta || ta.__u2e_drop) return; ta.__u2e_drop=true;
+    ta.addEventListener('dragover',e=>{ e.preventDefault(); ta.style.outline='1px dashed var(--cyan)'; });
+    ta.addEventListener('dragleave',()=>{ ta.style.outline=''; });
+    ta.addEventListener('drop',async e=>{
+      e.preventDefault(); ta.style.outline='';
+      if(e.dataTransfer?.files?.length) await handleFiles(e.dataTransfer.files);
+    });
+  }
+
+  // Botão "Converter (tabelas→listas)" — se já existir, não duplica
+  function injectConverterBtn(){
+    const tab=$('#tab-text'); const ta=$('#srcText'); if(!tab || !ta) return;
+    if($('#btn-converter-md')) return;
+    const btn=document.createElement('button'); btn.id='btn-converter-md'; btn.className='btn'; btn.textContent='Converter (tabelas→listas)';
+    btn.onclick=()=>{ ta.value = convertTablesToList(ta.value||''); toast('Tabelas → listas (-)'); };
+    ta.insertAdjacentElement('afterend', btn);
+  }
+
+  // Conversor simples de tabelas pipe → lista com "- (col1) · col2 · col3"
+  function convertTablesToList(md){
+    const lines=String(md||'').replace(/\r\n?/g,'\n').split('\n');
+    const out=[]; let i=0;
+    while(i<lines.length){
+      if(/^\s*\|.*\|\s*$/.test(lines[i])){
+        const block=[]; while(i<lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) block.push(lines[i++]);
+        if(block.length>=2){
+          out.push(block[0]); out.push(block[1]); // header + separador intactos
+          for(let r=2;r<block.length;r++){
+            const cells=block[r].trim().slice(1,-1).split('|').map(x=>x.trim());
+            if(cells.length){ const [h,...rest]=cells; out.push(`- (${h})${rest.length?' · '+rest.join(' · '):''}`); }
+          }
+          continue;
+        } else { out.push(...block); continue; }
+      }
+      out.push(lines[i++]);
+    }
+    return out.join('\n');
+  }
+
+  // Import do botão “Enviar Documento” da Home (se existir)
+  function hookWelcomeImportShortcut(){
+    document.addEventListener('click',(e)=>{
+      const el=e.target.closest('[data-action="importar"]'); if(!el) return;
+      // garante aba Texto visível quando abrir o painel
+      setTimeout(()=>switchToTextTab(),50);
+    });
+  }
+
+  // Init
+  window.addEventListener('DOMContentLoaded', ()=>{
+    rebindFileInputToEditor();
+    enableDropOnEditor();
+    injectConverterBtn();
+    hookWelcomeImportShortcut();
+    console.info('[Upload→Editor] pronto.');
+  });
+})();
+</script>
+
+ 
 </body></html>
