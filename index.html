@@ -2623,15 +2623,100 @@ document.addEventListener('keydown', e=>{
 
 <script type="module">
 /* ============================================================
-   KOBLLUX — MD Smart Generator (ARN) · v1.1 (Monólito)
+   KOBLLUX — MD Smart Generator (ARN) · v1.2 GLK (GLITCH-first)
+   - Upload → textarea (staging) lendo BYTES e decodificando windows-1252
+   - Pós-build GLITCH ASCII (sem emoji) no #root
    - Callouts linha única ::info/::warn/::aside
    - Tabela pipe → lista-tabela (linhas com "- ")
    - Coluna-chave (key) → parênteses na célula da linha
    - UI: "Converter → MD" + "Converter+Gerar" dentro do #tab-text
    ============================================================ */
+
+/* ---------- GLITCH ASCII (sem emoji, só ASCII visível) ---------- */
+const ASCII_POOL = "!@#$%^&*()_+-=[]{}|;:,.<>/?\\=~";
+const NON_ASCII_RE = /[^\x20-\x7E]/g;
+const EMOJI_SURR_RE = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+
+function rand(n){ return Math.floor(Math.random()*n); }
+function pickMini(){ let s="", n=1+rand(3); for(let i=0;i<n;i++) s+=ASCII_POOL[rand(ASCII_POOL.length)]; return s; }
+function pickBlock(){ const b=["##","//","??","++","**","==","--","::",";;","||","@@","%%","$$","!!","<>","[]","{}","~~"]; return b[rand(b.length)]; }
+
+function asciiize(s){
+  if(!s) return s;
+  s = s.normalize('NFD').replace(/[\u0300-\u036f]/g,'');   // tira acento
+  s = s.replace(EMOJI_SURR_RE, _=>pickBlock());            // emoji → blocos
+  s = s.replace(NON_ASCII_RE, ch => (ch==='\n'||ch==='\t') ? ch : pickMini());
+  return s;
+}
+
+/* Aplica glitch apenas em text nodes “de conteúdo” */
+function glitchDOM(root=document.getElementById('root')){
+  if(!root) return;
+  const SKIP = new Set(['SCRIPT','STYLE','CODE','PRE','KBD','TEXTAREA','INPUT','BUTTON','AUDIO','VIDEO','CANVAS']);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(n){
+      const p = n.parentElement; if(!p) return NodeFilter.FILTER_REJECT;
+      if(SKIP.has(p.tagName)) return NodeFilter.FILTER_REJECT;
+      if(p.closest('.btn,.action,#fab,.menu')) return NodeFilter.FILTER_REJECT;
+      return n.nodeValue && n.nodeValue.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    }
+  });
+  const todo=[]; while(walker.nextNode()) todo.push(walker.currentNode);
+  todo.forEach(n=>{ n.nodeValue = asciiize(n.nodeValue); });
+  root.classList.add('glk'); // classe opcional pra estilizar “modo ASCII”
+}
+
+/* Hooka autoBuild/autoBuildNested pra aplicar glitch depois de render */
+function installAfterBuildGlitch(){
+  const run = ()=>{ try{ glitchDOM(); }catch(e){ console.warn('[GLITCH] fail', e); } };
+  if(typeof window.autoBuild === 'function'){
+    const _o = window.autoBuild;
+    window.autoBuild = function(t){ _o(t); run(); };
+  }
+  if(typeof window.autoBuildNested === 'function'){
+    const _n = window.autoBuildNested;
+    window.autoBuildNested = function(t){ _n(t); run(); };
+  }
+  // se já tem conteúdo renderizado, aplica
+  if(document.getElementById('root')?.children.length) run();
+}
+
+/* ---------- Upload → textarea (staging) com GLITCH windows-1252 ---------- */
+function tryFindTextarea(){
+  return document.querySelector('#tab-text #srcText, #tab-text #src, #srcText, #src, textarea[name="src"], textarea');
+}
+function decode1252(ab){
+  try{ return new TextDecoder('windows-1252',{fatal:false}).decode(new Uint8Array(ab)); }
+  catch(e){ try{ return new TextDecoder('utf-8').decode(new Uint8Array(ab)); } catch(_){ return ''; } }
+}
+function installUploadStagingGlitch(selector='input[type=file], #upload, #fileUpload, .upload-input'){
+  const inputs = Array.from(document.querySelectorAll(selector));
+  const ta = tryFindTextarea();
+  if(!inputs.length || !ta) return;
+  inputs.forEach(inp=>{
+    if(inp.dataset.arnGlitch==='1') return;
+    inp.dataset.arnGlitch='1';
+    inp.addEventListener('change', ev=>{
+      const f = ev.target.files && ev.target.files[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.readAsArrayBuffer(f); // BYTES crus (mojibake garantida)
+      r.onload = ()=>{
+        const text = decode1252(r.result);
+        ta.value = text; ta.focus(); ta.setSelectionRange(0, Math.min(text.length, 2000));
+        (window.toast||console.log)('Upload → staging (GLITCH 1252)');
+      };
+    }, false);
+  });
+}
+
+/* ---------- Conversor: callouts + tabelas → lista-tabela + chave ---------- */
 function generateSmartMD(input, opts={}){
   const o = Object.assign({ title:'Documento Convertido', addHeaderButtons:true, addMeta:true }, opts||{});
-  let txt = String(input||'').replace(/\r\n?/g,'\n').replace(/[“”]/g,'"').replace(/[’‘]/g,"'").replace(/'''/g,'```');
+  let txt = String(input||'')
+    .replace(/\r\n?/g,'\n')
+    .replace(/[“”]/g,'"').replace(/[’‘]/g,"'")
+    .replace(/'''/g,'```');
   if(!/^#\s/m.test(txt)){ txt = `# ${o.title}\n\n` + txt; }
 
   const lines = txt.split('\n'), OUT=[]; let i=0;
@@ -2646,7 +2731,7 @@ function generateSmartMD(input, opts={}){
   while(i<lines.length){
     let line=lines[i];
     if(/^\s*```/.test(line)){ push(line); i++; while(i<lines.length && !/^\s*```/.test(lines[i])) push(lines[i++]); if(i<lines.length) push(lines[i++]); continue; }
-    const mFn=line.match(/^\s*["“”](.+function\s+[a-zA-Z_$][\w$]*\s*\([^)]*\)\s*\{.*\})["“”]\s*$/);
+    const mFn=line.match(/^\s*["“”](.+function\s+[a-zA-Z_$][\w$]*\s*$begin:math:text$[^)]*$end:math:text$\s*\{.*\})["“”]\s*$/);
     if(mFn){ push('```js'); push(mFn[1]); push('```'); i++; continue; }
     const plain=line.trim();
     if(plain){
@@ -2660,13 +2745,13 @@ function generateSmartMD(input, opts={}){
   }
   let md=OUT.join('\n');
 
-  // Normaliza callouts multiline → linha única
+  // Callouts multiline → linha única (sem “fechamento”)
   md = md.replace(
     /(^|\n)::(info|warn|aside|pulse|loop)\s*\n+([^:\n>][^\n]+(?:\n(?!::(info|warn|aside|pulse|loop)\b)[^\n]+)*)/gi,
     (m, pre, kind, body)=>`${pre}::${kind} ${body.replace(/\s*\n\s*/g,' ').trim()}`
   );
 
-  // Tabelas pipe → lista-tabela (com coluna-chave opcional)
+  // Tabela pipe → lista-tabela (header/separador intactos; linhas com "- | ... |")
   md = md.replace(
     /(^|\n)\|([^\n]+)\|\n\|([ :\-|]+)\|\n((?:\|[^\n]+\|\n?)+)/g,
     (m, pre, headerRow, sepRow, bodyRows) => {
@@ -2674,13 +2759,15 @@ function generateSmartMD(input, opts={}){
       let keyIdx = -1;
       for(let i=0;i<headers.length;i++){
         const h=headers[i];
-        if(/\(key\)|\[key\]|\*$/i.test(h) || /\b(chave|key)\b/i.test(h)){
-          keyIdx=i; headers[i]=h.replace(/\s*(\(key\)|\[key\]|\*)\s*$/i,''); break;
+        if(/$begin:math:text$key$end:math:text$|$begin:math:display$key$end:math:display$|\*$/i.test(h) || /\b(chave|key)\b/i.test(h)){
+          keyIdx=i; headers[i]=h.replace(/\s*($begin:math:text$key$end:math:text$|$begin:math:display$key$end:math:display$|\*)\s*$/i,''); break;
         }
       }
       const body = bodyRows.trim().split('\n').map(r=>r.trim()).filter(Boolean).map(r=>{
         const cells = r.replace(/^\|/,'').replace(/\|$/,'').split('|').map(s=>s.trim());
-        if(keyIdx>=0 && keyIdx<cells.length){ const c=cells[keyIdx]; cells[keyIdx]=/^\(.*\)$/.test(c)?c:`(${c})`; }
+        if(keyIdx>=0 && keyIdx<cells.length){
+          const c=cells[keyIdx]; cells[keyIdx]=/^$begin:math:text$.*$end:math:text$$/.test(c)?c:`(${c})`;
+        }
         return '- | '+cells.join(' | ')+' |';
       }).join('\n');
       return `${pre}|${headers.join(' | ')}|\n|${sepRow}|\n${body}\n`;
@@ -2690,11 +2777,11 @@ function generateSmartMD(input, opts={}){
   if(o.addHeaderButtons){
     md = md.replace(/^#\s+.+$/m, (h1)=>`${h1}\n\n[[btn:gerar|Gerar]] [[btn:nested|Gerar (aninhado)]] [[btn:md|Salvar .md]] [[btn:pdf|Imprimir PDF]]\n`);
   }
-  if(o.addMeta){ md += `\n\n::aside Documento gerado por MD Smart Generator (ARN) v1.1`; }
+  if(o.addMeta){ md += `\n\n::aside Documento gerado por MD Smart Generator (ARN) v1.2 GLK`; }
   return md;
 }
 
-// Exportador .md no padrão "lista-tabela"
+/* ---------- Export .md (lista-tabela) ---------- */
 function installExportMD_ListTable(){
   if(window.exportMD) return;
   window.exportMD = function(){
@@ -2716,7 +2803,7 @@ function installExportMD_ListTable(){
           if(rows.length){
             parts.push('| '+rows[0].join(' | ')+' |');
             parts.push('| '+rows[0].map(()=> '---').join(' | ')+' |');
-            rows.slice(1).forEach(r=> parts.push('- | '+r.join(' | ')+' |'));
+            rows.slice(1).forEach(r=>parts.push('- | '+r.join(' | ')+' |'));
           }
         }else if(el.matches('ul,ol')){
           el.querySelectorAll('li').forEach(li=>parts.push('- '+li.innerText.trim()));
@@ -2729,24 +2816,31 @@ function installExportMD_ListTable(){
   };
 }
 
-// Monta botões dentro do #tab-text ou fallback
+/* ---------- UI (botões no #tab-text) ---------- */
 function mountMDGeneratorButtons(){
   const tab=document.querySelector('#tab-text')||document.body;
   if(tab.querySelector('.btn-converter')) return; // evita duplicar
   const ta = tab.querySelector('#srcText, #src') || document.querySelector('#srcText, #src');
-  const bar=document.createElement('div'); bar.style.display='flex'; bar.style.gap='8px'; bar.style.marginTop='8px';
+  const bar=document.createElement('div'); bar.style.display='flex'; bar.style.gap='8px'; bar.style.marginTop='8px'; bar.style.flexWrap='wrap';
 
   const b1=document.createElement('button'); b1.className='btn btn-converter'; b1.textContent='Converter → MD';
   b1.onclick=()=>{ const raw=(ta&&ta.value)?ta.value:''; const md=generateSmartMD(raw||'# Documento\n\nTexto aqui...'); if(ta){ ta.value=md; ta.focus(); ta.setSelectionRange(0,md.length);} (window.toast||console.log)('Texto convertido para MD'); };
 
   const b2=document.createElement('button'); b2.className='btn btn-gen-inteligente'; b2.textContent='Converter+Gerar';
-  b2.onclick=()=>{ const raw=(ta&&ta.value)?ta.value:''; const md=generateSmartMD(raw||'# Documento\n\nTexto aqui...'); if(typeof window.autoBuild==='function'){ window.autoBuild(md); (window.toast||console.log)('Convertido e renderizado (ARN)'); } else { alert(md);} };
+  b2.onclick=()=>{ const raw=(ta&&ta.value)?ta.value:''; const md=generateSmartMD(raw||'# Documento\n\nTexto aqui...'); if(typeof window.autoBuild==='function'){ window.autoBuild(md); (window.toast||console.log)('Convertido e renderizado (ARN + GLITCH)'); } else { alert(md);} };
 
   bar.appendChild(b1); bar.appendChild(b2); tab.appendChild(bar);
 }
 
+/* ---------- Boot ---------- */
 function autoMountMDGen(){
-  try{ mountMDGeneratorButtons(); installExportMD_ListTable(); console.info('[MD Smart Generator · Monólito] pronto.'); }catch(e){ console.warn('MDGen mount fail', e); }
+  try{
+    mountMDGeneratorButtons();
+    installExportMD_ListTable();
+    installUploadStagingGlitch();   // << GLITCH-first (staging)
+    installAfterBuildGlitch();      // << GLITCH no render
+    console.info('[MD Smart Generator · v1.2 GLK] pronto.');
+  }catch(e){ console.warn('MDGen mount fail', e); }
 }
 window.addEventListener('DOMContentLoaded', autoMountMDGen);
 </script>
