@@ -4086,5 +4086,272 @@ function pickVoiceFor(text){
 
 })();
 </script>
+<script id="KOB_TTS_ARQVOICE_V3">
+(()=>{ 
+  if(!('speechSynthesis' in window)) return;
+  if(window.__KOB_TTS_ARQVOICE_V3__) return; window.__KOB_TTS_ARQVOICE_V3__=true;
 
+  const PRESET_KEY='INFODOSE_TUNER_V1';
+
+  // Marcadores de arquétipo (prefixo "Atlas: ..." ou tag "[arq: Atlas]")
+  const RE_ARQ_PREFIX=/^(?:\s*)(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion|Muda)\s*[:—-]\s*/i;
+  const RE_ARQ_TAG=/\[arq\s*:\s*(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion|Muda)\s*\]/i;
+
+  // Constantes (pode ajustar aqui)
+  const DEF={
+    Atlas:{pitch:1.00,rate:0.95}, Nova:{pitch:1.10,rate:1.12}, Vitalis:{pitch:0.98,rate:1.00},
+    Pulse:{pitch:1.05,rate:1.08}, Artemis:{pitch:1.06,rate:1.02}, Serena:{pitch:0.96,rate:0.98},
+    Kaos:{pitch:1.15,rate:1.18}, Genus:{pitch:1.00,rate:1.00}, Lumine:{pitch:1.06,rate:1.06},
+    Solus:{pitch:0.92,rate:0.92}, Rhea:{pitch:0.98,rate:0.98}, Aion:{pitch:1.12,rate:1.04}
+  };
+
+  // Mapa de nome preferido por arquétipo (pode sobrescrever via localStorage.voiceMap ou window.ARQ_VOICE_MAP)
+  function loadPreset(){ try{ return JSON.parse(localStorage.getItem(PRESET_KEY)||'{}'); }catch(e){ return {}; } }
+  const preset=loadPreset();
+  const VOICE_MAP=Object.assign(
+    {"Atlas":"Daniel","Nova":"Luciana","Vitalis":"Reed","Pulse":"Grandma","Artemis":"Junior","Serena":"Joana","Kaos":"Rocko","Genus":"Eddy","Lumine":"Flo","Solus":"Fred","Rhea":"Moira","Aion":"Rishi"},
+    (preset.voiceMap||{}),(window.ARQ_VOICE_MAP||{})
+  );
+
+  // Helper (autônomo, sem depender de outras funções)
+  function norm(s){ return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase(); }
+  function getVoices(){ try{ return speechSynthesis.getVoices()||[]; }catch(e){ return []; } }
+  function pickByAliases(aliases, voices){
+    voices=voices&&voices.length?voices:getVoices();
+    for(const a of (aliases||[])){ const na=norm(a); const v=voices.find(v=>norm(v.name).includes(na)); if(v) return v; }
+    for(const a of (aliases||[])){ const na=norm(a); const v=voices.find(v=>norm(v.lang||'').includes(na)); if(v) return v; }
+    const vpt=voices.find(v=>/^pt(-|$)/i.test(v.lang||'')); return vpt||voices[0]||null;
+  }
+
+  let CURRENT_ARCH = (localStorage.getItem('ARQ_LAST')||'') || null;
+  function setArch(a){ CURRENT_ARCH=a||null; try{ localStorage.setItem('ARQ_LAST', a||''); }catch(e){} }
+
+  function pickVoice(archetype, vs=getVoices()){
+    const mapName=(VOICE_MAP[archetype]||'').trim();
+    if(mapName){
+      const n=mapName.toLowerCase();
+      const exact=vs.find(v=>(v.name||'').toLowerCase()===n);
+      const sub=exact||vs.find(v=>(v.name||'').toLowerCase().includes(n));
+      if(sub){ sub.__arq_map_forced=true; return sub; }
+    }
+    // Se existir um ARCH_MAP global legado, aproveita os aliases
+    const aliases=(window.ARCH_MAP && window.ARCH_MAP[archetype])||[];
+    return aliases.length? pickByAliases(aliases, vs) : null;
+  }
+
+  const NATIVE_SPEAK=speechSynthesis.speak.bind(speechSynthesis);
+  speechSynthesis.speak=function(utt){
+    try{
+      const vs=getVoices();
+      const p=loadPreset();
+
+      // 1) Texto atual e detecção de arquétipo
+      let text=String(utt.text||utt._text||'');
+      let arch=null, m=text.match(RE_ARQ_PREFIX);
+      if(m){ arch=m[1]; text=text.replace(RE_ARQ_PREFIX,''); }
+      if(!arch){ m=text.match(RE_ARQ_TAG); if(m){ arch=m[1]; text=text.replace(RE_ARQ_TAG,''); } }
+
+      // 2) Persistência: se achou, grava; senão usa o último
+      if(arch) setArch(arch); else arch=CURRENT_ARCH;
+
+      // 3) Se temos arquétipo efetivo, aplica voz/pitch/rate
+      if(arch){
+        const cfg=(p.archetypes&&p.archetypes[arch])||DEF[arch]||{};
+        if(Number.isFinite(cfg.pitch)) utt.pitch=cfg.pitch;
+        if(Number.isFinite(cfg.rate))  utt.rate=cfg.rate;
+        if(!utt.voice){ // respeita a voz base se já tiver sido escolhida antes
+          const v=pickVoice(arch, vs);
+          if(v){ utt.voice=v; utt.lang=v.lang||utt.lang||'pt-BR'; }
+        }
+      }
+      // 4) Evita falar "Atlas:" em voz alta
+      if(text && text!==utt.text){ try{ utt.text=text; }catch(e){ utt._text=text; } }
+    }catch(e){}
+    return NATIVE_SPEAK(utt);
+  };
+})();
+</script>
+<!-- KOBLLUX · Debug Console Overlay (V1) -->
+<style id="KOBDBG_CSS">
+#kobdbg-toggle{position:fixed;top:230px;left:10px;z-index:2147483647}
+#kobdbg-toggle button{font:600 12px/1.2 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial; padding:8px 10px;border-radius:8px;border:0;box-shadow:0 2px 6px rgba(0,0,0,.15);background:#0f0;color:#000}
+#kobdbg{position:fixed;inset:0 0 auto 0;top:50px;left:8px;width:calc(100vw - 16px);max-width:920px;height:min(78vh,700px);z-index:2147483646;display:none}
+#kobdbg .panel{background:#0b0b0e; color:#e7fbe7; border:1px solid #1b1f1b; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.5); height:100%; display:flex; flex-direction:column; overflow:hidden}
+#kobdbg header{display:flex;gap:8px;align-items:center;padding:8px;border-bottom:1px solid #1c221c;background:linear-gradient(90deg,#0f0 0,#0f0a 60%,#0f0 100%);color:#000}
+#kobdbg header .title{font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+#kobdbg header .spacer{flex:1}
+#kobdbg header .btn{font:600 11px/1 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial;padding:6px 8px;border-radius:8px;border:0;background:#111;color:#0f0;border:1px solid #182;cursor:pointer}
+#kobdbg nav{display:flex;gap:6px;padding:6px;background:#0f140f;border-bottom:1px solid #1c221c}
+#kobdbg nav button{font:600 12px/1 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial;padding:8px;border-radius:8px;border:1px solid #1d281d;background:#0d120d;color:#9fef9f;cursor:pointer}
+#kobdbg nav button.active{background:#122c12;color:#d6ffd6;border-color:#2c4}
+#kobdbg .view{flex:1;overflow:auto;padding:8px;display:none}
+#kobdbg .view.active{display:block}
+#kobdbg pre, #kobdbg textarea{width:100%;min-height:140px;background:#0a0a0c;color:#d6ffd6;border:1px solid #1d281d;border-radius:8px;padding:10px;font:12px/1.4 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+#kobdbg table{width:100%;border-collapse:collapse;font:12px/1.35 ui-monospace,Menlo,Consolas,monospace}
+#kobdbg th,#kobdbg td{border-bottom:1px dashed #1d281d;padding:6px 8px;text-align:left;vertical-align:top}
+#kobdbg .row{display:flex;gap:8px;align-items:center;margin:8px 0}
+#kobdbg .row .btn{font:600 12px/1 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Inter,Arial;padding:8px;border-radius:8px;border:1px solid #1d281d;background:#0e120e;color:#aefcae;cursor:pointer}
+#kobdbg small.hint{opacity:.7}
+</style>
+<div id="kobdbg-toggle"><button type="button" aria-label="Abrir console">◎ Debug</button></div>
+<div id="kobdbg">
+  <div class="panel">
+    <header>
+      <div class="title">KOBLLUX · Console</div>
+      <div class="spacer"></div>
+      <button class="btn" data-kobdbg="export-html">Export HTML</button>
+      <button class="btn" data-kobdbg="close">Fechar</button>
+    </header>
+    <nav>
+      <button data-kobdbg-tab="logs" class="active">Logs</button>
+      <button data-kobdbg-tab="preset">Preset</button>
+      <button data-kobdbg-tab="inject">Injetar</button>
+      <button data-kobdbg-tab="voices">Vozes</button>
+    </nav>
+    <section class="view active" data-kobdbg-view="logs">
+      <div class="row">
+        <button class="btn" data-kobdbg="copy-logs">Copiar</button>
+        <button class="btn" data-kobdbg="save-logs">Salvar .json</button>
+        <button class="btn" data-kobdbg="clear-logs">Limpar</button>
+        <small class="hint">Capta console.log/info/warn/error + eventos TTS</small>
+      </div>
+      <pre id="kobdbg-logs"></pre>
+    </section>
+    <section class="view" data-kobdbg-view="preset">
+      <div class="row">
+        <button class="btn" data-kobdbg="load-preset">Ler</button>
+        <button class="btn" data-kobdbg="save-preset">Salvar</button>
+        <button class="btn" data-kobdbg="export-preset">Export .json</button>
+        <button class="btn" data-kobdbg="reset-preset">Reset</button>
+      </div>
+      <textarea id="kobdbg-preset" placeholder='Preset INFODOSE_TUNER_V1 (JSON)'></textarea>
+    </section>
+    <section class="view" data-kobdbg-view="inject">
+      <div class="row">
+        <button class="btn" data-kobdbg="insert-style">Inserir CSS</button>
+        <button class="btn" data-kobdbg="insert-js-text">Inserir JS (texto)</button>
+      </div>
+      <textarea id="kobdbg-css" placeholder='/* cola teu CSS aqui */'></textarea>
+      <textarea id="kobdbg-js" placeholder='// cola teu JavaScript aqui (será inserido como texto &lt;script type="text/plain"&gt;)' ></textarea>
+    </section>
+    <section class="view" data-kobdbg-view="voices">
+      <div class="row">
+        <button class="btn" data-kobdbg="scan-voices">Scan</button>
+        <button class="btn" data-kobdbg="speak-test">Speak Test</button>
+      </div>
+      <table id="kobdbg-voices"></table>
+    </section>
+  </div>
+</div>
+<script id="KOBDBG_JS">(function(){
+  const elToggleBtn = document.querySelector('#kobdbg-toggle button');
+  const elWrap = document.getElementById('kobdbg');
+  const elLogs = document.getElementById('kobdbg-logs');
+  const elPreset = document.getElementById('kobdbg-preset');
+  const elCSS = document.getElementById('kobdbg-css');
+  const elJS = document.getElementById('kobdbg-js');
+  const logs = [];
+  function fmt(ts, level, msg){ return '['+new Date(ts).toLocaleTimeString()+'] '+level.toUpperCase()+': '+msg; }
+  function push(level, args){
+    try{
+      const msg = Array.from(args).map(x=>{
+        try{ return typeof x==='string'? x : JSON.stringify(x); }catch(e){ return String(x); }
+      }).join(' ');
+      const line = fmt(Date.now(), level, msg);
+      logs.push(line);
+      elLogs.textContent = logs.slice(-500).join('\\n');
+    }catch(e){}
+  }
+  // monkey-patch console
+  ['log','info','warn','error'].forEach(level=>{
+    const native = console[level].bind(console);
+    console[level] = function(){ push(level, arguments); try{ native.apply(console, arguments);}catch(e){} };
+  });
+  // TTS event tap (best-effort)
+  try{
+    if('speechSynthesis' in window){
+      const nativeSpeak = speechSynthesis.speak.bind(speechSynthesis);
+      speechSynthesis.speak = function(u){
+        try{
+          const vname = u && u.voice ? u.voice.name : '(voz-desconhecida)';
+          push('log', ['[TTS]', 'arch?', (u.text||'').slice(0,48)+'…', '→', vname, '@ r', u.rate, ' p', u.pitch]);
+        }catch(e){}
+        nativeSpeak(u);
+      };
+    }
+  }catch(e){}
+  // toggles
+  elToggleBtn.addEventListener('click', ()=>{ elWrap.style.display = (elWrap.style.display==='none'||!elWrap.style.display) ? 'block':'none'; });
+  elWrap.querySelector('[data-kobdbg="close"]').addEventListener('click', ()=>{ elWrap.style.display='none'; });
+  // tabs
+  elWrap.querySelectorAll('nav button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      elWrap.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.getAttribute('data-kobdbg-tab');
+      elWrap.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      elWrap.querySelector('.view[data-kobdbg-view="'+tab+'"]').classList.add('active');
+    });
+  });
+  // actions
+  function download(name, text){
+    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  }
+  elWrap.querySelector('[data-kobdbg="copy-logs"]').addEventListener('click', async ()=>{
+    try{ await navigator.clipboard.writeText(logs.join('\\n')); alert('Logs copiados.'); }catch(e){ alert('Falha ao copiar'); }
+  });
+  elWrap.querySelector('[data-kobdbg="save-logs"]').addEventListener('click', ()=> download('kobllux_logs.json', JSON.stringify({logs}, null, 2)));
+  elWrap.querySelector('[data-kobdbg="clear-logs"]').addEventListener('click', ()=>{ logs.length=0; elLogs.textContent=''; });
+  // preset
+  const PRESET_KEY = 'INFODOSE_TUNER_V1';
+  elWrap.querySelector('[data-kobdbg="load-preset"]').addEventListener('click', ()=>{
+    try{ elPreset.value = localStorage.getItem(PRESET_KEY) || ''; }catch(e){ elPreset.value=''; }
+  });
+  elWrap.querySelector('[data-kobdbg="save-preset"]').addEventListener('click', ()=>{
+    try{ localStorage.setItem(PRESET_KEY, elPreset.value); alert('Preset salvo.'); }catch(e){ alert('Falha ao salvar'); }
+  });
+  elWrap.querySelector('[data-kobdbg="export-preset"]').addEventListener('click', ()=>{
+    try{ const txt = localStorage.getItem(PRESET_KEY)||''; download('INFODOSE_TUNER_V1.json', txt||'{}'); }catch(e){}
+  });
+  elWrap.querySelector('[data-kobdbg="reset-preset"]').addEventListener('click', ()=>{
+    try{ localStorage.removeItem(PRESET_KEY); elPreset.value=''; alert('Preset removido.'); }catch(e){}
+  });
+  // inject
+  elWrap.querySelector('[data-kobdbg="insert-style"]').addEventListener('click', ()=>{
+    const css = elCSS.value || '';
+    const el = document.getElementById('KOB_INJECTED_STYLE') || Object.assign(document.createElement('style'), {id:'KOB_INJECTED_STYLE'});
+    el.textContent = css;
+    document.head.appendChild(el);
+    alert('CSS aplicado.');
+  });
+  elWrap.querySelector('[data-kobdbg="insert-js-text"]').addEventListener('click', ()=>{
+    const js = elJS.value || '';
+    const el = document.getElementById('KOB_INJECTED_JS') || Object.assign(document.createElement('script'), {id:'KOB_INJECTED_JS', type:'text/plain'});
+    el.textContent = js;
+    document.body.appendChild(el);
+    alert('JS inserido como texto (não executa).');
+  });
+  // export html atual (com injeções e console)
+  elWrap.querySelector('[data-kobdbg="export-html"]').addEventListener('click', ()=>{
+    try{
+      const html = '<!doctype html>\\n' + document.documentElement.outerHTML;
+      download('page_kobllux_debug.html', html);
+    }catch(e){ alert('Falha ao exportar.'); }
+  });
+  // voices scan
+  function tableVoices(vs){
+    const rows = ['<tr><th>name</th><th>lang</th><th>default</th><th>local</th></tr>']
+      .concat((vs||[]).map(v=>`<tr><td>${v.name}</td><td>${v.lang||''}</td><td>${v.default||''}</td><td>${v.localService||''}</td></tr>`));
+    document.getElementById('kobdbg-voices').innerHTML = rows.join('');
+  }
+  elWrap.querySelector('[data-kobdbg="scan-voices"]').addEventListener('click', ()=>{
+    try{ tableVoices(speechSynthesis.getVoices()||[]); }catch(e){ tableVoices([]); }
+  });
+  elWrap.querySelector('[data-kobdbg="speak-test"]').addEventListener('click', ()=>{
+    try{ const u=new SpeechSynthesisUtterance('Teste de voz do console KOBLLUX'); speechSynthesis.speak(u); }catch(e){}
+  });
+})();</script>
+ 
 </body></html>
