@@ -3427,7 +3427,7 @@ window.addEventListener('DOMContentLoaded', autoMountBugadao);
     outline: true,
     asciiMode: 'describe',      // 'describe' | 'skip' | 'read'
     clickToSpeak: true,         // clicar no bloco inicia leitura
-    preferMale: true            // prioridade de vozes
+    preferMale: false,            // prioridade de vozes
   }, readPrefs());
 
   /* ---------- Util ---------- */
@@ -4556,7 +4556,7 @@ const VOICE_MAP = Object.assign(
     }
     // 2) otherwise choose by language priority
     const nav = (navigator.language||'').toLowerCase();
-    const want = ['pt-br','pt', nav || 'pt-br', 'en-us', 'en']; // pt first
+    const want = ['pt-br','pt', nav || 'pt-br','es-ES', 'es-MX', 'fr-FR', 'en-US', 'en']; // pt first
     let best = null, bestScore=-1;
     for(const v of vs){
       const sc = scoreVoice(v, want);
