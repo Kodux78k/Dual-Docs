@@ -682,7 +682,7 @@ function inlineMD(s){
     ensureVoice();
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    if(__tts_voice) // [auto-clean] removed hard-coded u.voice;
+    if(__tts_voice) u.voice = __tts_voice;
     u.lang = (__tts_voice && __tts_voice.lang) || 'pt-BR';
     u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
     speechSynthesis.speak(u);
@@ -3262,7 +3262,7 @@ window.addEventListener('DOMContentLoaded', autoMountBugadao);
     if(!t){ toastSafe('Selecione um trecho primeiro'); return; }
     ensureVoice(); try{ synth.cancel(); }catch(e){}
     const u = new SpeechSynthesisUtterance(t);
-    if(voice) // [auto-clean] removed hard-coded u.voice;
+    if(voice) u.voice = voice;
     u.lang = (voice && voice.lang) || 'pt-BR';
     u.rate = 1.0; u.pitch = 1.0; u.volume = 1.0;
     synth.speak(u);
@@ -3427,7 +3427,7 @@ window.addEventListener('DOMContentLoaded', autoMountBugadao);
     outline: true,
     asciiMode: 'describe',      // 'describe' | 'skip' | 'read'
     clickToSpeak: true,         // clicar no bloco inicia leitura
-    preferMale: false,            // prioridade de vozes
+    preferMale: true            // prioridade de vozes
   }, readPrefs());
 
   /* ---------- Util ---------- */
@@ -3663,7 +3663,7 @@ s = s.replace(/\$begin:math:display\$\$[\s\S]*?\$\$end:math:display\$/g, ' ');
     try{ synth.cancel(); }catch{}
     const conf = pickVoiceFor(text);
     const u = new SpeechSynthesisUtterance(text);
-    if(conf.voice) // [auto-clean] removed hard-coded u.voice;
+    if(conf.voice) u.voice = conf.voice;
     u.lang = (conf.voice && conf.voice.lang) || 'pt-BR';
     u.rate = conf.rate; u.pitch = conf.pitch; u.volume=1;
 
@@ -3727,7 +3727,7 @@ s = s.replace(/\$begin:math:display\$\$[\s\S]*?\$\$end:math:display\$/g, ' ');
     try{ synth.cancel(); }catch{}
     const conf = pickVoiceFor(t);
     const uu = new SpeechSynthesisUtterance(sanitize(t,'para'));
-    if(conf.voice) u// [auto-clean] removed hard-coded u.voice;
+    if(conf.voice) uu.voice=conf.voice;
     uu.lang=(conf.voice&&conf.voice.lang)||'pt-BR'; uu.rate=conf.rate; uu.pitch=conf.pitch; uu.volume=1;
     synth.speak(uu);
   });
@@ -3916,10 +3916,10 @@ function pickVoiceFor(text){
     const u = new SpeechSynthesisUtterance(cleaned);
     __tts_utterance = u;
 
-    if(__tts_voice) // [auto-clean] removed hard-coded u.voice;
+    if(__tts_voice) u.voice = __tts_voice;
     u.lang = (__tts_voice && __tts_voice.lang) || 'pt-BR';
-    u.rate = 1.0;
-    u.pitch = 1.0;
+    u.rate = 0.97;
+    u.pitch = 1.09;
     u.volume = 1.0;
 
     u.onstart = () => setStatus('Lendo...');
@@ -4088,90 +4088,223 @@ function pickVoiceFor(text){
 </script>
 
 
-<!-- KOBLLUX · Archetype→Voice Override (No-Gender, Auto per Archetype) : V1 -->
-<script id="KOB_TTS_ARQVOICE_V1">(function(){
-  if(!('speechSynthesis' in window)) return;
-  if(window.__KOB_TTS_ARQVOICE_V1__) return; window.__KOB_TTS_ARQVOICE_V1__=true;
-
-  const ARCH_MAP = {"Atlas": ["Daniel", "Ricardo", "Miguel", "pt-BR", "pt-PT", "pt", "en-US"], "Nova": ["Luciana", "Joana", "Vitoria", "Vitória", "pt-BR", "pt-PT", "pt", "en-US"], "Vitalis": ["Reed", "Daniel", "Ricardo", "pt-BR", "en-US", "en"], "Pulse": ["Grandma", "Luciana", "Joana", "en-US", "pt-BR"], "Artemis": ["Junior", "Joao", "João", "Daniel", "pt-BR", "pt-PT"], "Serena": ["Joana", "Luciana", "Francisca", "pt-PT", "pt-BR", "pt"], "Kaos": ["Rocko", "Ricardo", "Daniel", "en-US", "pt-BR"], "Genus": ["Eddy", "Daniel", "Ricardo", "en-US", "pt-BR"], "Lumine": ["Flo", "Luciana", "Joana", "en-US", "pt-BR"], "Solus": ["Fred", "Daniel", "Ricardo", "en-US", "pt-BR"], "Rhea": ["Moira", "Joana", "Luciana", "pt-PT", "pt-BR"], "Aion": ["Rishi", "Daniel", "Ricardo", "en-IN", "en-US", "pt-BR"], "Muda": ["Daniel", "Ricardo", "Luciana", "pt-BR", "pt-PT", "pt", "en-US"]};
-
-  function norm(s){ return (s||'').normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase(); }
-  function getVoices(){ try{ return speechSynthesis.getVoices()||[]; }catch(e){ return []; } }
-
-  const prev = speechSynthesis.onvoiceschanged;
-  speechSynthesis.onvoiceschanged = function(){
-    try{ prev && prev.apply(speechSynthesis, arguments); }catch(e){}
-  };
-
-  function pickVoiceByAliases(aliases, voices){
-    if(!voices || !voices.length) voices = getVoices();
-    for(const a of (aliases||[])){
-      const na = norm(a);
-      const v1 = voices.find(v => norm(v.name).includes(na));
-      if(v1) return v1;
-    }
-    for(const a of (aliases||[])){
-      const na = norm(a);
-      const v2 = voices.find(v => norm(v.lang||'').includes(na));
-      if(v2) return v2;
-    }
-    const vpt = voices.find(v => /^pt(-|$)/i.test(v.lang||''));
-    if(vpt) return vpt;
-    return voices[0] || null;
-  }
-
-  function getPreset(){
-    try{ return JSON.parse(localStorage.getItem('INFODOSE_TUNER_V1')||'{}'); }catch(e){ return {}; }
-  }
-
-  const RE_ARQ_PREFIX = new RegExp(String.raw`^(?:\\s*)(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion|Muda)\\s*[:—-]\\s*`, 'i');
-  const RE_ARQ_TAG = /\[arq\s*:\s*(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion|Muda)\s*\]/i;
-
-  function resolveArchetypeFromText(txt){
-    if(!txt) return null;
-    const m1 = txt.match(RE_ARQ_PREFIX); if(m1) return m1[1];
-    const m2 = txt.match(RE_ARQ_TAG);    if(m2) return m2[1];
-    return null;
-  }
-
-  function applyPresetAndArchetype(u){
+<!-- BIG_LOCK_RESET_v1 — limpa locks e força preferências de base -->
+<script id="BIG_LOCK_RESET_v1">
+(()=>{
+  try{
+    const K='kob_tts_prefs_v32';
+    const p = Object.assign({preferMale:false,userLockedBase:false,voiceName:''}, JSON.parse(localStorage.getItem(K)||'{}'));
+    p.preferMale=false; p.userLockedBase=false; p.voiceName='';
+    localStorage.setItem(K, JSON.stringify(p));
+  }catch{}
+  // opcional: expõe um atalho pro console
+  window.__kob_reset_tts_prefs = ()=>{
     try{
-      const voices = getVoices();
-      const preset = getPreset();
-      const txt = (u && (u.text||u._text||'')) || '';
-      const arch = resolveArchetypeFromText(txt);
+      const K='kob_tts_prefs_v32';
+      const p = {preferMale:false,userLockedBase:false,voiceName:''};
+      localStorage.setItem(K, JSON.stringify(p));
+      return p;
+    }catch(e){ return e&&e.message; }
+  };
+})();
+</script>
 
-      if(arch && preset && preset.archetypes && preset.archetypes[arch]){
-        const cfg = preset.archetypes[arch];
-        if(Number.isFinite(cfg.rate))  u.rate  = cfg.rate;
-        if(Number.isFinite(cfg.pitch)) u.pitch = cfg.pitch;
-        if(cfg.voice){
-          const aliases = [cfg.voice, ...(ARCH_MAP[arch]||[])];
-          const v = pickVoiceByAliases(aliases, voices);
-          if(v){ u.voice = v; u.lang = v.lang || u.lang || 'pt-BR'; return; }
-        }
-      }
 
-      if(arch && ARCH_MAP[arch]){
-        const v = pickVoiceByAliases(ARCH_MAP[arch], voices);
-        if(v){ u.voice = v; u.lang = v.lang || u.lang || 'pt-BR'; }
-      } else {
-        if(!u.voice){
-          const vpt = voices.find(v => /^pt(-|$)/i.test(v.lang||''));
-          if(vpt){ u.voice = vpt; u.lang = vpt.lang || 'pt-BR'; }
-        }
-      }
-    }catch(e){}
+<!-- FORCE_LUCIANA_ARQ_OVERRIDE_v4 — drop-in, substitui v3 -->
+<script id="FORCE_LUCIANA_ARQ_OVERRIDE_v4">
+(()=>{
+  if (window.__FORCE_LUCIANA_ARQ_OVERRIDE_V4__) return;
+  window.__FORCE_LUCIANA_ARQ_OVERRIDE_V4__ = true;
+
+  const synth = window.speechSynthesis;
+
+  // ===== Utils =====
+  const PT = v => /^pt/i.test(v.lang||"");
+  const ES = v => /^es/i.test(v.lang||"");
+  const NORM = s => String(s||"")
+      .normalize("NFD").replace(/\p{Diacritic}/gu,"")
+      .toLowerCase();
+
+  function getVoicesSafe(){ try{ return synth.getVoices()||[]; }catch{ return []; } }
+
+  function pickLucianaOrPT(vs){
+    return vs.find(v=>/luciana/i.test(v.name||"")) ||
+           vs.find(PT) ||
+           vs.find(ES) ||
+           vs[0] || null;
   }
 
-  const NATIVE_SPEAK = speechSynthesis.speak.bind(speechSynthesis);
-  speechSynthesis.speak = function(utt){
-    try{ applyPresetAndArchetype(utt); }catch(e){}
-    NATIVE_SPEAK(utt);
+  // ===== Archetype resolve (prefix no início do parágrafo) =====
+  const ARCH_RE = /^\s*(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion)\b/i;
+
+  // Mapa padrão (tokens) + merge com overrides do app
+  const VOICE_MAP = Object.assign({
+    Atlas:'es_m', Nova:'Luciana', Vitalis:'pt_m', Pulse:'Eddy',
+    Artemis:'Monica', Serena:'Joana', Kaos:'Rocko', Genus:'pt_m',
+    Lumine:'Flo', Solus:'es_m', Rhea:'Joana', Aion:'Monica'
+  }, (window.ARQ_VOICE_MAP||{}));
+  // Mantém referência externa se quiser mexer via console:
+  window.ARQ_VOICE_MAP = VOICE_MAP;
+
+  // Heurísticas de nomes por gênero/idioma (cobre navegadores comuns)
+  const NAME_F_PT = /(luciana||Grandma|vit[oó]ria|camila|maria|sofia)/i;
+  const NAME_M_PT = /(daniel|reed|Grandpa|Eddy|ricardo|miguel|thiago|henrique|felipe|jo[aã]o)/i;
+  const NAME_F_ES = /(conchita|m[oó]nica|monica|paulina|luz)/i;
+  const NAME_M_ES = /(jorge|fred|diego|eddy|sebasti[aá]n|sebastian)/i;
+
+  function pickBySpec(spec, vs){
+    if(!spec) return null;
+    const s = String(spec).trim().toLowerCase();
+
+    // Tokens canônicos
+    if (s==='pt_f') return vs.find(v=>PT(v)&&NAME_F_PT.test(v.name||"")) || vs.find(PT) || null;
+    if (s==='pt_m') return vs.find(v=>PT(v)&&NAME_M_PT.test(v.name||"")) || vs.find(PT) || null;
+    if (s==='es_f') return vs.find(v=>ES(v)&&NAME_F_ES.test(v.name||"")) || vs.find(ES) || null;
+    if (s==='es_m') return vs.find(v=>ES(v)&&NAME_M_ES.test(v.name||"")) || vs.find(ES) || null;
+
+    // Idioma genérico
+    if (s==='pt')   return vs.find(PT) || null;
+    if (s==='es')   return vs.find(ES) || null;
+
+    // Nome: exato → parcial
+    const ex = vs.find(v => NORM(v.name) === NORM(spec));
+    if (ex) return ex;
+    return vs.find(v => NORM(v.name).includes(NORM(spec))) || null;
+  }
+
+  function applyArchetypeVoice(u, vs){
+    try{
+      const m = (u.text||"").match(ARCH_RE);
+      if(!m) return false; // sem arquétipo explícito
+      const arch = m[1][0].toUpperCase()+m[1].slice(1).toLowerCase();
+      const v  = pickBySpec(VOICE_MAP[arch], vs);
+      if (v){
+        u.voice = v;
+        u.lang = u.lang || v.lang || "pt-BR";
+        return true;
+      }
+      return false;
+    }catch{ return false; }
+  }
+
+  function applyBaseLuciana(u, vs){
+    try{
+      const pick = pickLucianaOrPT(vs);
+      // se não houver voz, ou a atual não for PT/ES, força base
+      if (!u.voice || !(PT(u.voice) || ES(u.voice))){
+        if (pick){ u.voice = pick; u.lang = u.lang || pick.lang || "pt-BR"; }
+      } else if (!u.lang){
+        u.lang = u.voice.lang || "pt-BR";
+      }
+    }catch{}
+  }
+
+  // ===== Carregamento confiável de voices (fila + polling) =====
+  let VOICES = getVoicesSafe();
+  let ready = !!VOICES.length;
+  const Q = []; // fila de utterances pendentes
+  let polTimer = null, tries = 0;
+
+  function refreshVoices(){
+    VOICES = getVoicesSafe();
+    if (VOICES.length && !ready){
+      ready = true;
+      drainQueue();
+      if (polTimer) clearInterval(polTimer), polTimer=null;
+    }
+  }
+
+  function ensureVoices(){
+    if (ready) return;
+    // Evento do navegador
+    if (typeof synth.onvoiceschanged === 'object'){
+      synth.onvoiceschanged = refreshVoices;
+    }
+    // Poll de segurança (iOS costuma precisar)
+    if (!polTimer){
+      polTimer = setInterval(()=>{
+        tries++;
+        refreshVoices();
+        if (ready || tries>40){ clearInterval(polTimer); polTimer=null; }
+      }, 150);
+    }
+  }
+
+  function drainQueue(){
+    // solta em ordem, já com voz aplicada
+    while(Q.length){
+      const u = Q.shift();
+      // Evita processar 2x
+      if (u.__kob_spoken_v4) continue;
+      wireUtterance(u);
+      u.__kob_spoken_v4 = true;
+      NATIVE_SPEAK(u);
+    }
+  }
+
+  function wireUtterance(u){
+    try{
+      // Se já foi processado, não refazer
+      if (u.__kob_wired_v4) return;
+      u.__kob_wired_v4 = true;
+
+      // 1) tenta voz do arquétipo (se parágrafo iniciar com nome)
+      const swapped = applyArchetypeVoice(u, VOICES);
+      // 2) se não trocou (ou não achou), força base Luciana/PT/ES
+      if(!swapped) applyBaseLuciana(u, VOICES);
+
+      // Segurança final de idioma:
+      if (!u.lang) u.lang = (u.voice && u.voice.lang) || "pt-BR";
+    }catch{}
+  }
+
+  // ===== Wrap seguro do speak/cancel =====
+  const NATIVE_SPEAK  = window.__KOB_NATIVE_SPEAK__  || synth.speak.bind(synth);
+  const NATIVE_CANCEL = window.__KOB_NATIVE_CANCEL__ || synth.cancel.bind(synth);
+  window.__KOB_NATIVE_SPEAK__  = NATIVE_SPEAK;  // salva 1x
+  window.__KOB_NATIVE_CANCEL__ = NATIVE_CANCEL; // salva 1x
+
+  synth.speak = function(u){
+    // se não for utterance, passa direto
+    if (!(u instanceof SpeechSynthesisUtterance)) return NATIVE_SPEAK(u);
+
+    ensureVoices();
+    if (!ready || !VOICES.length){
+      // fila até as voices chegarem
+      Q.push(u);
+      return;
+    }
+
+    wireUtterance(u);
+    u.__kob_spoken_v4 = true;
+    return NATIVE_SPEAK(u);
   };
 
-  console.log('[KOBLLUX] Archetype→Voice Override (V1) ativo — sem gênero manual; voz por arquétipo.');
-})();</script>
+  synth.cancel = function(){
+    Q.length = 0; // limpa fila local
+    return NATIVE_CANCEL();
+  };
+
+  // ===== Prewarm base globals se existirem =====
+  (function prewarm(){
+    refreshVoices();
+    const base = pickLucianaOrPT(VOICES);
+    try{
+      if ("baseVoice" in window) window.baseVoice = base;
+      if ("voiceBase" in window) window.voiceBase = base;
+    }catch{}
+  })();
+
+  // ===== Helpers manuais (opcionais) =====
+  window.forceLuciana = function(){
+    refreshVoices();
+    const pick = pickLucianaOrPT(VOICES);
+    return (pick && pick.name) || "—";
+  };
+  window.setArchetypeVoiceMap = (m)=> Object.assign(VOICE_MAP, m||{});
+
+})();
+</script>
 
 <!-- KOBLLUX · Debug Console Overlay (V2) -->
 <style id="KOBDBG_CSS">
@@ -4472,206 +4605,6 @@ function pickVoiceFor(text){
   showDom(document.body);
 })();</script>
 
-
-<!-- KOB_TTS_ARQVOICE_V2 — Archetype Voice Resolver (pt-BR first, debounce, voices-ready) -->
-<script id="KOB_TTS_ARQVOICE_V2">
-(()=>{
-  if(window.__KOB_TTS_ARQVOICE_V2__) return; window.__KOB_TTS_ARQVOICE_V2__=true;
-
-  // ---- Utilities
-  const log = (...a)=>{ try{ console.info('[ARQVOICE V2]', ...a);}catch(e){} };
-  const once = (fn)=>{ let ran=false, val; return (...args)=>{ if(ran) return val; ran=true; val=fn(...args); return val; }; };
-
-  // ---- Load preset (optional)
-  const PRESET_KEY = 'INFODOSE_TUNER_V1';
-  function loadPreset(){
-    try{ return JSON.parse(localStorage.getItem(PRESET_KEY)||'{}'); }catch(e){ return {}; }
-  }
-  const preset = loadPreset();
-  const pArq = (preset.archetypes||{});
-
-  
-const VOICE_MAP = Object.assign(
-  {"Atlas": "Daniel", "Nova": "Luciana", "Vitalis": "Reed", "Pulse": "Grandma", "Artemis": "Junior", "Serena": "Joana", "Kaos": "Rocko", "Genus": "Eddy", "Lumine": "Flo", "Solus": "Fred", "Rhea": "Moira", "Aion": "Rishi"},
-  (preset.voiceMap||{}),
-  (window.ARQ_VOICE_MAP||{})
-);
-// ---- Default per archetype (no hard lock on names; pitch/rate only)
-  const DEF = {
-    Atlas:   { pitch:1.00, rate:0.95 },
-    Nova:    { pitch:1.10, rate:1.12 },
-    Vitalis: { pitch:0.98, rate:1.00 },
-    Pulse:   { pitch:1.05, rate:1.08 },
-    Artemis: { pitch:1.06, rate:1.02 },
-    Serena:  { pitch:0.96, rate:0.98 },
-    Kaos:    { pitch:1.15, rate:1.18 },
-    Genus:   { pitch:1.00, rate:1.00 },
-    Lumine:  { pitch:1.06, rate:1.06 },
-    Solus:   { pitch:0.92, rate:0.92 },
-    Rhea:    { pitch:0.98, rate:0.98 },
-    Aion:    { pitch:1.12, rate:1.04 },
-  };
-
-  // ---- Voices ready (handles iOS delay)
-  function voicesNow(){ try{ return (speechSynthesis.getVoices()||[]); }catch(e){ return []; } }
-  function waitForVoices(timeoutMs=2000){
-    return new Promise(resolve=>{
-      const t0 = performance.now();
-      const tick = ()=>{
-        const vs = voicesNow();
-        if(vs.length>0 || (performance.now()-t0) > timeoutMs){ resolve(vs); return; }
-        setTimeout(tick, 60);
-      };
-      try{ speechSynthesis.onvoiceschanged = ()=> resolve(voicesNow()); }catch(e){}
-      tick();
-    });
-  }
-
-  // ---- Voice select (pt-BR first, then 'pt-*', then navigator.language, then default)
-  function normalize(s){ return String(s||'').toLowerCase(); }
-  function scoreVoice(v, wantLangs){
-    const lang = normalize(v.lang);
-    // Prefer localService, then matches in order
-    let s = 0;
-    if(v.localService) s += 2;
-    // wantLangs is array of language priorities (strings)
-    wantLangs.forEach((wl, i)=>{ if(lang.startsWith(normalize(wl))) s += (10 - i); });
-    return s;
-  }
-  function pickVoice(archetype, vs){
-    
-  // Mapping priority: if archetype has a mapped name, try it first
-  const mapName = (VOICE_MAP[archetype]||'').trim();
-  if(mapName){
-    const n = normalize(mapName);
-    const byExact = vs.find(v=> normalize(v.name)===n );
-    const bySub   = byExact || vs.find(v=> normalize(v.name).includes(n) );
-    if(bySub){ bySub.__arq_map_forced = true; return bySub; }
-  }
-// 1) if preset has explicit voice name (non-empty), honor if exists
-    const pv = (pArq[archetype]||{}).voice;
-    if(pv && pv.trim()){
-      const byName = vs.find(v=> normalize(v.name) === normalize(pv) ) || vs.find(v=> normalize(v.name).includes(normalize(pv)));
-      if(byName){ return byName; }
-    }
-    // 2) otherwise choose by language priority
-    const nav = (navigator.language||'').toLowerCase();
-    const want = ['pt-br','pt', nav || 'pt-br','es-ES', 'es-MX', 'fr-FR', 'en-US', 'en']; // pt first
-    let best = null, bestScore=-1;
-    for(const v of vs){
-      const sc = scoreVoice(v, want);
-      if(sc>bestScore){ best=v; bestScore=sc; }
-    }
-    return best || vs[0] || null;
-  }
-
-  // ---- Debounce identical utterances in a short window to avoid duplicates
-  let lastText='', lastWhen=0;
-  function shouldSkip(text){
-    const now = performance.now();
-    if(text && text===lastText && (now - lastWhen) < 120){ return true; }
-    lastText = text; lastWhen = now; return false;
-  }
-
-  // ---- Main "speak with archetype" hook
-  // Expect the rest of your code to call window.ARQ_SPEAK(text, archetype, type?)
-  async function ARQ_SPEAK(text, archetype, type='normal'){
-    if(!text) return;
-    if(shouldSkip(text)) return;
-
-    // Wait voices
-    const vs = await waitForVoices(2200);
-    if(!('SpeechSynthesisUtterance' in window)){ return; }
-
-    // Select voice
-    const vSel = pickVoice(archetype||'', vs);
-    const cfg = Object.assign({}, DEF[archetype||'']||{}, pArq[archetype||'']||{});
-    const u = new SpeechSynthesisUtterance(text);
-    if(vSel){ u.voice = vSel; u.lang = vSel.lang || 'pt-BR'; 
-    if(vSel && vSel.__arq_map_forced){ u.__arq_forced = true; }
-}
-    if(cfg.rate)  u.rate  = cfg.rate;
-    if(cfg.pitch) u.pitch = cfg.pitch;
-
-    try{
-      log('speak', {arch: archetype, text:text.slice(0,64)+'…', voice: vSel?vSel.name:'(default)', lang: u.lang, r:u.rate, p:u.pitch});
-      speechSynthesis.speak(u);
-    }catch(e){ log('ERR speak', e); }
-  }
-
-  // ---- Global hook (optional)
-  window.ARQ_SPEAK = ARQ_SPEAK;
-
-  // ---- Patch a "generic speak" if your app uses one
-  // If you already have a function speakArch(text, arch), you can re-route:
-  if(!window.speakArch){
-    window.speakArch = (t,a)=> ARQ_SPEAK(t,a);
-  }
-
-  // ---- Safety: if any legacy code sets u.voice after ours, guard here by overriding speak to re-enforce
-  const nativeSpeak = speechSynthesis.speak.bind(speechSynthesis);
-  speechSynthesis.speak = function(u){
-    try{
-      if(!(u instanceof SpeechSynthesisUtterance)){ return nativeSpeak(u); }
-      
-      
-      // respect mapping if explicitly forced on utterance (skip non-pt null)
-      if(u.voice && u.__arq_forced){ /* keep mapped voice */ }
-      else if(u.voice && !/^pt/i.test(u.voice.lang||'')) u.voice = null;
-
-      // if still no voice, try mapping by inferred archetype (text or global)
-      if(!u.voice){
-        try{
-          let arch = (window.ARQ_CURRENT_ARCHETYPE || u.arch || '');
-          if(!arch){
-            const t = (u.text||'');
-            let m = t.match(/\barch\s*:\s*([a-z]+)/i);
-            if(m) arch = m[1];
-            if(!arch){
-              // try known names appearing at start
-              m = t.match(/^\s*(Atlas|Nova|Vitalis|Pulse|Artemis|Serena|Kaos|Genus|Lumine|Solus|Rhea|Aion)\b/i);
-              if(m) arch = m[1];
-            }
-          }
-          if(arch){
-            const vs = voicesNow();
-            const mapName = (VOICE_MAP && VOICE_MAP[arch]) ? VOICE_MAP[arch] : '';
-            if(mapName){
-              const n = normalize(mapName);
-              const byExact = vs.find(v=> normalize(v.name)===n );
-              const bySub   = byExact || vs.find(v=> normalize(v.name).includes(n) );
-              if(bySub){ u.voice = bySub; u.lang = bySub.lang||u.lang; u.__arq_forced = true; }
-            }
-          }
-        }catch(e){}
-      }
-
-      // voices not ready? requeue once
-      if(!u.voice){
-        const vs = voicesNow();
-        if((vs||[]).length===0 && !u.__arq_queued){
-          u.__arq_queued = true;
-          return setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} }, 120);
-        }
-      }
-if(u.voice && !/^pt/i.test(u.voice.lang||'')) u.voice = null;
-// If no voice/lang, apply our pick quickly
-      if(!u.voice){
-        const vs = voicesNow();
-        const v = pickVoice('(auto)', vs);
-        if(v){ u.voice=v; u.lang=v.lang||u.lang; }
-      }
-    }catch(e){}
-    return nativeSpeak(u);
-  };
-
-  // ---- Warmup (call once to trigger voices load on iOS after first touch)
-  setTimeout(()=>{ try{ speechSynthesis.getVoices(); }catch(e){} }, 50);
-
-  log('ready.');
-})();
-</script>
-
 <style id="KOB_DRIFT_CSS">
 .kob-drift{position:fixed;inset:auto auto 16px 16px;z-index:2147483000;
   display:inline-flex;align-items:center;justify-content:center;
@@ -4697,6 +4630,7 @@ if(u.voice && !/^pt/i.test(u.voice.lang||'')) u.voice = null;
 #kobdbg-toggle.kob-drift button{background:transparent; border:0; box-shadow:none; width:100%; height:100%;
   color:inherit; font:inherit; border-radius:inherit; padding:0; margin:0;}
 </style>
+
 <script id="KOB_DRIFT_JS">
 (()=>{
   if(window.__KOB_DRIFT_V1__) return; window.__KOB_DRIFT_V1__=true;
@@ -4898,4 +4832,5 @@ if(u.voice && !/^pt/i.test(u.voice.lang||'')) u.voice = null;
   };
 })();
 </script>
+
 </body></html>
