@@ -3810,9 +3810,9 @@ function pickVoiceFor(text){
       const arch = window.KOB_TTS_VOICE_STYLE_HOOK(text);
       if (arch) {
         const ST = {
-          atlas:{rate:.95,pitch:0.80}, nova:{rate:1.12,pitch:1.12},
+          atlas:{rate:.95,pitch:0.80}, nova:{rate:1.09,pitch:1.18},
           vitalis:{rate:1.08,pitch:1.34}, pulse:{rate:1.02,pitch:1.12},
-          serena:{rate:.98,pitch:.96}, kaos:{rate:1.18,pitch:1.02},
+          serena:{rate:.98,pitch:.96}, kaos:{rate:1.13,pitch:1.02},
           genus:{rate:1.00,pitch:1.00}, lumine:{rate:1.00,pitch:1.28},
           rhea:{rate:.97,pitch:1.00}, solus:{rate:.93,pitch:.95},
           aion:{rate:1.00,pitch:1.08}
@@ -4311,7 +4311,7 @@ function pickVoiceFor(text){
 (()=>{
   const ARCHETYPES = [
     { id:'atlas',   name:'Atlas',   tone:'Estratégico, metódico',        modulation:'Grave, ritmo calculado, dicção nítida.',        voice:'Reed',    rate:1.0,  pitch:0.86 },
-    { id:'nova',    name:'Nova',    tone:'Vibrante, entusiasmado',       modulation:'Agudo, entusiasmado, ligeiramente rápido.',      voice:'Luciana', rate:1.13, pitch:1.34 },
+    { id:'nova',    name:'Nova',    tone:'Vibrante, entusiasmado',       modulation:'Agudo, entusiasmado, ligeiramente rápido.',      voice:'Luciana', rate:1.063, pitch:1.34 },
     { id:'vitalis', name:'Vitalis', tone:'Energético, urgente',          modulation:'Rápido, intenso, motivacional.',                  voice:'Rocko',   rate:1.02, pitch:1.42 },
     { id:'pulse',   name:'Pulse',   tone:'Emocional, melódico',          modulation:'Fluido, tom médio/suave.',                       voice:'Reed',    rate:1.0, pitch:1.14 },
     { id:'artemis', name:'Artemis', tone:'Aventureiro, expansivo',       modulation:'Curioso, exploratório.',                         voice:'es_f',    rate:1.00, pitch:1.18 },
@@ -4345,7 +4345,7 @@ function pickVoiceFor(text){
       modulation:'Suave, quase sussurrado, ritmo ondulante.',            voice:'Joana',   rate:0.94, pitch:1.42 },
 
     { id:'minuz',   name:'Minuz',   tone:'Minimalista, direto, hacker',
-      modulation:'Rápido, cortes secos, foco em termos técnicos.',       voice:'Reed',    rate:1.15, pitch:1.00 },
+      modulation:'Rápido, cortes secos, foco em termos técnicos.',       voice:'Reed',    rate:1.05, pitch:1.10 },
 
     { id:'Fit lux', name:'Fit Lux', tone:'Estético, simbólico, futurista',
       modulation:'Tom limpo, levemente ecoado, cadência ritualística.',  voice:'Monica',  rate:1.00, pitch:1.08 }
