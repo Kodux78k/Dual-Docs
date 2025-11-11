@@ -270,6 +270,96 @@ img.md-img{border-radius:12px;box-shadow:0 0 25px rgba(120,240,255,.1);}
 }
 
 </style>
+
+<style id="KOBLLUX_VOICE_THEME_CSS">
+:root{
+  --kob-voice-primary:   #00d8d8;
+  --kob-voice-secondary: #d800d8;
+  --kob-voice-accent:    #ffffff;
+  --kob-voice-bg-soft:   rgba(0,216,216,0.08);
+  --kob-voice-glow:      0 0 18px rgba(0,216,216,0.55);
+}
+
+/* Dock do TTS acompanha a voz atual */
+.kob-tts-dock{
+  background: var(--kob-voice-bg-soft);
+  box-shadow: var(--kob-voice-glow);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.kob-tts-dock button[data-tts-btn="toggle"]{
+  border: 1px solid var(--kob-voice-primary);
+  color:  var(--kob-voice-accent);
+}
+
+.kob-tts-dock button[data-tts-btn="sel"],
+.kob-tts-dock button[data-tts-btn="stop"]{
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+/* Se você marcar algum bloco como "sendo lido" no futuro */
+[data-being-read="true"]{
+  outline: 1px solid var(--kob-voice-primary);
+  background: var(--kob-voice-bg-soft);
+}
+
+/* Tema adicional por arquétipo (opcional, pra brincar com o body) */
+body[data-voice-arch="kobllux"]{
+  --kob-voice-primary:#00d8d8;
+  --kob-voice-secondary:#d800d8;
+}
+body[data-voice-arch="nova"]{
+  --kob-voice-primary:#FF6FB5;
+  --kob-voice-secondary:#FFD6E8;
+}
+body[data-voice-arch="kaos"]{
+  --kob-voice-primary:#FF5C8A;
+  --kob-voice-secondary:#3D000F;
+}
+body[data-voice-arch="serena"]{
+  --kob-voice-primary:#7AD3A8;
+  --kob-voice-secondary:#154734;
+}
+body[data-voice-arch="vitalis"]{
+  --kob-voice-primary:#00F5A0;
+  --kob-voice-secondary:#00D9F5;
+}
+body[data-voice-arch="pulse"]{
+  --kob-voice-primary:#A259FF;
+  --kob-voice-secondary:#2D1B69;
+}
+body[data-voice-arch="atlas"]{
+  --kob-voice-primary:#6CCFF6;
+  --kob-voice-secondary:#1B4965;
+}
+body[data-voice-arch="lumine"]{
+  --kob-voice-primary:#FFE066;
+  --kob-voice-secondary:#FF9F1C;
+}
+body[data-voice-arch="rhea"]{
+  --kob-voice-primary:#00B894;
+  --kob-voice-secondary:#055E55;
+}
+body[data-voice-arch="solus"]{
+  --kob-voice-primary:#4B6584;
+  --kob-voice-secondary:#0B1420;
+}
+body[data-voice-arch="aion"]{
+  --kob-voice-primary:#00A8E8;
+  --kob-voice-secondary:#001F54;
+}
+body[data-voice-arch="cooplux"]{
+  --kob-voice-primary:#39FFB6;
+  --kob-voice-secondary:#00d8d8;
+}
+body[data-voice-arch="fitlux"]{
+  --kob-voice-primary:#FFC857;
+  --kob-voice-secondary:#FFE39A;
+}
+</style>
+
 </head>
 <body>
 <div class="nebula"></div>
@@ -3814,7 +3904,7 @@ function pickVoiceFor(text){
           vitalis:{rate:1.08,pitch:1.34}, pulse:{rate:1.02,pitch:1.12},
           serena:{rate:.98,pitch:.96}, kaos:{rate:1.13,pitch:1.02},
           genus:{rate:1.00,pitch:1.00}, lumine:{rate:1.00,pitch:1.28},
-          rhea:{rate:.97,pitch:1.00}, solus:{rate:.93,pitch:.95},
+          rhea:{rate:.97,pitch:0.69}, solus:{rate:.93,pitch:.95},
           aion:{rate:1.00,pitch:1.08}
         }[String(arch).toLowerCase()];
         if (ST) return { voice: baseVoice, rate: ST.rate, pitch: ST.pitch };
@@ -4310,45 +4400,49 @@ function pickVoiceFor(text){
 <script id="KOBLLUX_VOICES_INTEGRATION">
 (()=>{
   const ARCHETYPES = [
-    { id:'atlas',   name:'Atlas',   tone:'Estratégico, metódico',        modulation:'Grave, ritmo calculado, dicção nítida.',        voice:'Reed',    rate:1.0,  pitch:0.86 },
+    { id:'atlas',   name:'Atlas',   tone:'Estratégico, metódico',        modulation:'Grave, ritmo calculado, dicção nítida.',        voice:'Reed',    rate:1.0,  pitch:0.93 },
     { id:'nova',    name:'Nova',    tone:'Vibrante, entusiasmado',       modulation:'Agudo, entusiasmado, ligeiramente rápido.',      voice:'Luciana', rate:1.063, pitch:1.34 },
-    { id:'vitalis', name:'Vitalis', tone:'Energético, urgente',          modulation:'Rápido, intenso, motivacional.',                  voice:'Rocko',   rate:1.02, pitch:1.42 },
+    { id:'vitalis', name:'Vitalis', tone:'Energético, urgente',          modulation:'Rápido, intenso, motivacional.',                  voice:'Rocko',   rate:0.96, pitch:1.42 },
     { id:'pulse',   name:'Pulse',   tone:'Emocional, melódico',          modulation:'Fluido, tom médio/suave.',                       voice:'Reed',    rate:1.0, pitch:1.14 },
-    { id:'artemis', name:'Artemis', tone:'Aventureiro, expansivo',       modulation:'Curioso, exploratório.',                         voice:'es_f',    rate:1.00, pitch:1.18 },
+    { id:'artemis', name:'Artemis', tone:'Aventureiro, expansivo',       modulation:'Curioso, exploratório.',                         voice:'es_f',    rate:1.00, pitch:1.23 },
     { id:'serena',  name:'Serena',  tone:'Calmo, acolhedor',             modulation:'Suave, terapêutico, com pausas.',                voice:'Joana',   rate:0.92, pitch:0.90 },
     { id:'kaos',    name:'Kaos',    tone:'Desafiador, imprevisível',     modulation:'Intenso, ritmo entrecortado.',                   voice:'Rocko',   rate:1.09, pitch:1.28 },
     { id:'genus',   name:'Genus',   tone:'Prático, detalhista',          modulation:'Tom firme, foco na dicção.',                     voice:'Reed',    rate:0.98, pitch:1.20 },
     { id:'lumine',  name:'Lumine',  tone:'Alegre, brincalhão',           modulation:'Agudo, vibrante.',                               voice:'Flo',     rate:1.030, pitch:1.55 },
-    { id:'solus',   name:'Solus',   tone:'Sábio, introspectivo',         modulation:'Grave, lento, eco sutil.',                       voice:'es_m',    rate:0.88, pitch:0.88 },
-    { id:'rhea',    name:'Rhea',    tone:'Profundo, conectivo',          modulation:'Calmo, eco sutil.',                              voice:'Joana',   rate:0.94, pitch:0.92 },
+    { id:'solus',   name:'Solus',   tone:'Sábio, introspectivo',         modulation:'Grave, lento, eco sutil.',                       voice:'es_m',    rate:0.88, pitch:0.87 },
+    { id:'rhea',    name:'Rhea',    tone:'Profundo, conectivo',          modulation:'Calmo, eco sutil.',                              voice:'Joana',   rate:1.02, pitch:0.59 },
     { id:'aion',    name:'Aion',    tone:'Futurista, metódico',          modulation:'Tom constante, progressivo.',                    voice:'Monica',  rate:0.98, pitch:1.00 },
 
     { id:'kobllux', name:'KOBLLUX', tone:'Núcleo do sistema, oracular',
-      modulation:'Grave-médio, presença de comando, ritmo estável.',     voice:'es_m',  rate:0.98, pitch:0.78 },
+      modulation:'Grave-médio, presença de comando, ritmo estável.',     voice:'es_m',  rate:0.98, pitch:0.48 },
 
     { id:'uno',     name:'Uno',     tone:'Essência, origem, foco',
-      modulation:'Tom centrado, poucas variações, pausas marcadas.',     voice:'Shelley',    rate:0.90, pitch:0.94 },
+      modulation:'Tom centrado, poucas variações, pausas marcadas.',     voice:'Grandma',    rate:0.90, pitch:0.93 },
 
     { id:'dual',    name:'Dual',    tone:'Espelho, contraste, jogo',
-      modulation:'Alterna leve entre grave/agudo, ritmo pulsante.',      voice:'Ricardo',    rate:1.02, pitch:1.02 },
+      modulation:'Alterna leve entre grave/agudo, ritmo pulsante.',      voice:'pt_m',    rate:1.02, pitch:1.02 },
 
     { id:'trinity', name:'Trinity', tone:'Síntese, tríade viva',
-      modulation:'Voz estável com micro variações rítmicas em 3 tempos.', voice:'Eddy', rate:1.04, pitch:1.04 },
+      modulation:'Voz estável com micro variações rítmicas em 3 tempos.', voice:'Sandy', rate:1.04, pitch:1.04 },
 
     { id:'infodose',name:'Infodose',tone:'Didático, carismático, dopamínico',
-      modulation:'Tom amigável, ritmo de recompensa → curiosidade.',      voice:'Luciana', rate:1.06, pitch:1.06 },
+      modulation:'Tom amigável, ritmo de recompensa → curiosidade.',      voice:'Luciana', rate:1.06, pitch:0.96 },
 
     { id:'kodux',   name:'KODUX',   tone:'Criador do pulso, metaconsciência',
-      modulation:'Grave, confiante, pausas longas, intenção forte.',      voice:'pt_m',  rate:0.96, pitch:0.78 },
+      modulation:'Grave, confiante, pausas longas, intenção forte.',      voice:'Reed pt-BR',  rate:0.86, pitch:0.68 },
 
     { id:'bllue',   name:'Bllue',   tone:'Emocional, sensorial, intuitivo',
       modulation:'Suave, quase sussurrado, ritmo ondulante.',            voice:'Joana',   rate:0.94, pitch:1.42 },
 
     { id:'minuz',   name:'Minuz',   tone:'Minimalista, direto, hacker',
-      modulation:'Rápido, cortes secos, foco em termos técnicos.',       voice:'Reed',    rate:1.05, pitch:1.10 },
+      modulation:'Rápido, cortes secos, foco em termos técnicos.',       voice:'Reed',    rate:1.05, pitch:0.90 },
 
-    { id:'Fit lux', name:'Fit Lux', tone:'Estético, simbólico, futurista',
-      modulation:'Tom limpo, levemente ecoado, cadência ritualística.',  voice:'Monica',  rate:1.00, pitch:1.08 }
+    { id:'hanah', name:'HANAH', tone:'Estético, simbólico, futurista',
+      modulation:'Tom limpo, levemente ecoado, cadência ritualística.',  voice:'Monica',  rate:1.00, pitch:1.08 },
+
+  { id:'metalux', name:'MetaLux', tone:'Estético, simbólico, futurista',
+      modulation:'Tom limpo, levemente ecoado, cadência ritualística.',  voice:'Grandma',  rate:0.80, pitch:1.68 }
+
   ];
 
   window.KOBLLUX_VOICES = ARCHETYPES.reduce((acc,a)=>{
@@ -4375,6 +4469,215 @@ function pickVoiceFor(text){
 
   // 🔔 avisa pro painel que as vozes estão prontas
   window.dispatchEvent(new Event('KOBLLUX_VOICES_READY'));
+
+})();
+</script>
+
+<!-- KOBLLUX · PATCH de Tema de Voz (cor por arquétipo) -->
+<script id="KOBLLUX_VOICE_THEME_PATCH">
+(()=>{
+  if (window.__KOBLLUX_VOICE_THEME_PATCH__) return;
+  window.__KOBLLUX_VOICE_THEME_PATCH__ = true;
+
+  const COLOR_MAP = {
+    kobllux: {
+      primary:'#00d8d8', secondary:'#d800d8', accent:'#39FFB6',
+      bg_soft:'rgba(0,216,216,0.08)',
+      glow:'0 0 18px rgba(0,216,216,0.55)'
+    },
+    cooplux:{
+      primary:'#39FFB6', secondary:'#00d8d8', accent:'#ffffff',
+      bg_soft:'rgba(57,255,182,0.10)',
+      glow:'0 0 16px rgba(57,255,182,0.60)'
+    },
+    fitlux:{
+      primary:'#FFC857', secondary:'#FFE39A', accent:'#22252f',
+      bg_soft:'rgba(255,200,87,0.12)',
+      glow:'0 0 16px rgba(255,200,87,0.70)'
+    },
+    atlas:{
+      primary:'#6CCFF6', secondary:'#1B4965', accent:'#CAE9FF',
+      bg_soft:'rgba(108,207,246,0.10)',
+      glow:'0 0 14px rgba(108,207,246,0.55)'
+    },
+    nova:{
+      primary:'#FF6FB5', secondary:'#FFD6E8', accent:'#FFE066',
+      bg_soft:'rgba(255,111,181,0.12)',
+      glow:'0 0 16px rgba(255,111,181,0.65)'
+    },
+    vitalis:{
+      primary:'#00F5A0', secondary:'#00D9F5', accent:'#0b1720',
+      bg_soft:'rgba(0,245,160,0.10)',
+      glow:'0 0 18px rgba(0,245,160,0.65)'
+    },
+    pulse:{
+      primary:'#A259FF', secondary:'#2D1B69', accent:'#F1E4FF',
+      bg_soft:'rgba(162,89,255,0.12)',
+      glow:'0 0 18px rgba(162,89,255,0.70)'
+    },
+    serena:{
+      primary:'#7AD3A8', secondary:'#154734', accent:'#EAFBF3',
+      bg_soft:'rgba(122,211,168,0.12)',
+      glow:'0 0 16px rgba(122,211,168,0.65)'
+    },
+    kaos:{
+      primary:'#FF5C8A', secondary:'#3D000F', accent:'#FFD6E0',
+      bg_soft:'rgba(255,92,138,0.12)',
+      glow:'0 0 20px rgba(255,92,138,0.75)'
+    },
+    genus:{
+      primary:'#4EE1A0', secondary:'#193A3A', accent:'#E1FFF2',
+      bg_soft:'rgba(78,225,160,0.10)',
+      glow:'0 0 16px rgba(78,225,160,0.65)'
+    },
+    lumine:{
+      primary:'#FFE066', secondary:'#FF9F1C', accent:'#2F2F40',
+      bg_soft:'rgba(255,224,102,0.16)',
+      glow:'0 0 18px rgba(255,224,102,0.75)'
+    },
+    rhea:{
+      primary:'#00B894', secondary:'#055E55', accent:'#D1FFF6',
+      bg_soft:'rgba(0,184,148,0.14)',
+      glow:'0 0 16px rgba(0,184,148,0.65)'
+    },
+    solus:{
+      primary:'#4B6584', secondary:'#0B1420', accent:'#E3EFFA',
+      bg_soft:'rgba(75,101,132,0.16)',
+      glow:'0 0 14px rgba(75,101,132,0.65)'
+    },
+    aion:{
+      primary:'#00A8E8', secondary:'#001F54', accent:'#C4F1FF',
+      bg_soft:'rgba(0,168,232,0.14)',
+      glow:'0 0 16px rgba(0,168,232,0.70)'
+    },
+    uno:{
+      primary:'#FFFFFF', secondary:'#BBBBBB', accent:'#FFFFFF',
+      bg_soft:'rgba(255,255,255,0.05)',
+      glow:'0 0 16px rgba(255,255,255,0.35)'
+    },
+    dual:{
+      primary:'#FF9F1C', secondary:'#2EC4B6', accent:'#f5f5f5',
+      bg_soft:'rgba(255,159,28,0.10)',
+      glow:'0 0 14px rgba(255,159,28,0.65)'
+    },
+    trinity:{
+      primary:'#00d8d8', secondary:'#FFE066', accent:'#ffffff',
+      bg_soft:'rgba(0,216,216,0.09)',
+      glow:'0 0 18px rgba(0,216,216,0.70)'
+    },
+    infodose:{
+      primary:'#39FFB6', secondary:'#FFE066', accent:'#11141c',
+      bg_soft:'rgba(57,255,182,0.12)',
+      glow:'0 0 18px rgba(57,255,182,0.75)'
+    },
+    kodux:{
+      primary:'#FF6FB5', secondary:'#5B2C6F', accent:'#FDEBFF',
+      bg_soft:'rgba(91,44,111,0.18)',
+      glow:'0 0 16px rgba(255,111,181,0.70)'
+    },
+    bllue:{
+      primary:'#4A90E2', secondary:'#142850', accent:'#E3F2FF',
+      bg_soft:'rgba(74,144,226,0.14)',
+      glow:'0 0 16px rgba(74,144,226,0.70)'
+    },
+    minuz:{
+      primary:'#FF3366', secondary:'#111111', accent:'#FFE3ED',
+      bg_soft:'rgba(255,51,102,0.16)',
+      glow:'0 0 16px rgba(255,51,102,0.75)'
+    },
+    hanah:{
+      primary:'#FFB6C1', secondary:'#3C1F3C', accent:'#FFE9F0',
+      bg_soft:'rgba(255,182,193,0.16)',
+      glow:'0 0 16px rgba(255,182,193,0.70)'
+    },
+    metalux:{
+      primary:'#B0E0E6', secondary:'#202733', accent:'#F0FBFF',
+      bg_soft:'rgba(176,224,230,0.16)',
+      glow:'0 0 18px rgba(176,224,230,0.70)'
+    }
+  };
+
+  const root = document.documentElement;
+  const body = document.body;
+
+  function normalizeKey(s){
+    return String(s||'').normalize('NFD')
+      .replace(/\p{Diacritic}/gu,'')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g,'');
+  }
+
+  function detectArchKeyFromText(text){
+    if(!text) return null;
+    const raw = String(text);
+    const trimmed = raw.trim();
+    const lowAll  = trimmed.toLowerCase();
+
+    // 1) [Nome] no começo do parágrafo
+    const m = trimmed.match(/^\[([^\]]+)\]/);
+    if(m){
+      const namePart = m[1].split('—')[0].split('-')[0].trim();
+      const k = normalizeKey(namePart);
+      if(COLOR_MAP[k]) return k;
+    }
+
+    // 2) procura pelo nome dentro do texto
+    for(const key of Object.keys(COLOR_MAP)){
+      if(lowAll.includes(key)) return key;
+    }
+
+    // 3) fallback: hook externo (já existe no teu TTS)
+    try{
+      if(window.KOB_TTS_VOICE_STYLE_HOOK){
+        const arch = window.KOB_TTS_VOICE_STYLE_HOOK(raw);
+        const k = normalizeKey(arch);
+        if(COLOR_MAP[k]) return k;
+      }
+    }catch(e){}
+
+    return null;
+  }
+
+  function applyColorTheme(key){
+    const cfg = COLOR_MAP[key];
+    if(!cfg) return;
+
+    root.style.setProperty('--kob-voice-primary',   cfg.primary  || '#00d8d8');
+    root.style.setProperty('--kob-voice-secondary', cfg.secondary|| cfg.primary || '#d800d8');
+    root.style.setProperty('--kob-voice-accent',    cfg.accent   || '#ffffff');
+    root.style.setProperty('--kob-voice-bg-soft',   cfg.bg_soft  || 'rgba(0,0,0,0.25)');
+    root.style.setProperty('--kob-voice-glow',      cfg.glow     || '0 0 0 transparent');
+
+    if(body){
+      body.setAttribute('data-voice-arch', key);
+    }
+
+    // se quiser integrar com outros painéis
+    try{
+      window.dispatchEvent(new CustomEvent('KOB_VOICE_COLOR',{
+        detail:{ id:key, color:cfg }
+      }));
+    }catch(e){}
+  }
+
+  const prevSpeak = window.speechSynthesis.speak.bind(window.speechSynthesis);
+
+  window.speechSynthesis.speak = function(u){
+    try{
+      if(u instanceof SpeechSynthesisUtterance){
+        const key = detectArchKeyFromText(u.text||'');
+        if(key){
+          applyColorTheme(key);
+          console.log('🎨 KOBLLUX THEME →', key);
+        }
+      }
+    }catch(e){
+      console.warn('KOBLLUX_VOICE_THEME_PATCH error:', e);
+    }
+    return prevSpeak(u);
+  };
+
+  console.log('⚡ KOBLLUX_VOICE_THEME_PATCH ativo — cores dinâmicas por arquétipo');
 
 })();
 </script>
