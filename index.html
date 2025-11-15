@@ -5477,4 +5477,128 @@ document.addEventListener('click',(e)=>{
 })();
 </script>
 
+<script id="KOB_ARQ_KEYWORDS_BLUE">
+/* Palavras-gatilho por arquétipo — Manifesto Infodose / Blue */
+const ARCH_KEYWORDS = {
+  Atlas: [
+    'mapa','rota','roadmap','framework','escopo','blueprint',
+    'agenda','milestone','planejar','planejamento','arquitetura'
+  ],
+  Nova: [
+    'ideia','idéia','prototipo','protótipo','mvp','laboratorio',
+    'laboratório','experimento','brainstorm','inova','inovar',
+    'criar','criação','laboratório vivo'
+  ],
+  Pulse: [
+    'ritmo','bpm','cadencia','cadência','loop','batida','beat',
+    'cadenciar','pulso','bater','marcar tempo','tempo interno'
+  ],
+  Vitalis: [
+    'respirar','respire','respiração','hidratar','sono','ergonomia',
+    'corpo','postura','energia','vitalidade','descanso','pausa ativa'
+  ],
+  Artemis: [
+    'alvo','foco','prioridade','laser','cortar','corte',
+    'precisão','priorizar','mirar','objetivo central'
+  ],
+  Serena: [
+    'calma','gentileza','acolhimento','pausa','paz',
+    'tranquilidade','soft','suavizar','silêncio interno'
+  ],
+  Kaos: [
+    'glitch','bugar','disrupt','caos','quebrar padrão','overclock',
+    'quebrar rotina','bagunçar','explodir','subverter'
+  ],
+  Genus: [
+    'algoritmo','schema','regex','lógica','logica','merge',
+    'contexto','parser','engine','modelo mental','estrutura interna'
+  ],
+  Lumine: [
+    'lanterna','diagrama','guia','iluminar','clareza','explicar',
+    'exemplo','destaque','brilho','visualizar','diagramar'
+  ],
+  Rhea: [
+    'terra','raiz','nutrir','base','ancorar','ancora','sustentar',
+    'fundação','fundacao','solo','nutrição','cuidar do terreno'
+  ],
+  Solus: [
+    'imersao','imersão','monotarefa','offline','silencio','silêncio',
+    'deep work','concentração','foco absoluto','retirada','isolamento'
+  ],
+  Aion: [
+    'ciclo','calendario','calendário','recorrencia','recorrência',
+    '369','3·6·9','ritual','rotina','frequência','ritual diário',
+    'agenda recorrente'
+  ]
+};
+
+// deixa global pra outros scripts
+window.ARQ_KEYWORDS = ARCH_KEYWORDS;
+
+// helper opcional
+function inferArchFromText(text) {
+  const t = String(text || '').toLowerCase();
+  let bestArch = null;
+  let bestScore = 0;
+
+  const src = window.ARQ_KEYWORDS || ARCH_KEYWORDS;
+  for (const [arch, words] of Object.entries(src)) {
+    let score = 0;
+    for (const w of words) {
+      if (!w) continue;
+      if (t.includes(w.toLowerCase())) score++;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestArch = arch;
+    }
+  }
+  return bestScore > 0 ? bestArch : null;
+}
+window.inferArchFromText = inferArchFromText;
+</script> 
+
+<script id="KOB_BLUE_TAGGER_V1">
+(function(){
+  if (!window.inferArchFromText && !window.ARQ_KEYWORDS) return;
+
+  const SEL_BLOCKS = 'p, li, blockquote, .coach, .callout, .equation, pre, td, th';
+
+  function normalizeArchKey(raw){
+    if (!raw) return null;
+    const k = String(raw).trim();
+    return k.charAt(0).toUpperCase() + k.slice(1).toLowerCase();
+  }
+
+  function tagBlocksOnce(root){
+    const base = root || document;
+    const infer = window.inferArchFromText;
+    const els = base.querySelectorAll(SEL_BLOCKS);
+    els.forEach(el=>{
+      const txt = (el.innerText || '').trim();
+      if (!txt) return;
+      // não sobrescreve se já tiver data-arch ou [[[Tag]]]
+      if (el.dataset.arch) return;
+      if (/^\s*\[\s*\[\s*\[\s*[a-zA-Z0-9_]+\s*\]\s*\]\s*\]/.test(txt)) return;
+
+      const arch = infer ? infer(txt) : null;
+      if (!arch) return;
+
+      const key = normalizeArchKey(arch);
+      el.dataset.arch = key.toLowerCase();
+    });
+  }
+
+  // roda na carga inicial
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', ()=> tagBlocksOnce(document));
+  } else {
+    tagBlocksOnce(document);
+  }
+
+  // deixa um helper global se você quiser re-taggear depois de re-render
+  window.blueTagBlocks = tagBlocksOnce;
+})();
+</script>
+
 </body></html>
